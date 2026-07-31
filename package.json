@@ -1,0 +1,25 @@
+{
+  "name": "setu",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @setu/api db:generate",
+    "db:migrate": "pnpm --filter @setu/api db:migrate",
+    "db:seed": "pnpm --filter @setu/api db:seed"
+  },
+  "devDependencies": {
+    "@setu/config": "workspace:*",
+    "prettier": "^3.3.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  }
+}

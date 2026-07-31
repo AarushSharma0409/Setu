@@ -1,0 +1,17 @@
+node_modules
+.pnpm-store
+.turbo
+.next
+dist
+coverage
+coverage-e2e
+.local-storage
+.local-storage*
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.*.example
+*.log
+*.tsbuildinfo
+Dockerfile.local

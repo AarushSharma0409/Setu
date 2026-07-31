@@ -1,0 +1,9 @@
+node_modules
+.pnpm-store
+.turbo
+.next
+dist
+coverage
+coverage-e2e
+pnpm-lock.yaml
+Setu_Architecture.md

@@ -1,0 +1,11 @@
+@import "@setu/ui/styles";
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #f8fafc;
+  color: #0f172a;
+  margin: 0;
+}

@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  VENDOR
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  OPERATIONS
+  REVIEWER
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum SessionSubjectType {
+  USER
+  ADMIN
+}
+
+enum VendorStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum VendorDocumentType {
+  GST_CERTIFICATE
+  PAN_CARD
+  BUSINESS_REGISTRATION
+  ADDRESS_PROOF
+  OTHER
+}
+
+enum VendorDocumentStatus {
+  UPLOADED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone         String?            @unique
+  email         String?            @unique
+  name          String?
+  role          UserRole           @default(USER)
+  status        AccountStatus      @default(ACTIVE)
+  phoneVerified Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  sessions      RefreshSession[]
+  vendorProfile VendorProfile?
+
+  @@index([role])
+  @@index([status])
+}
+
+model AdminUser {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String             @unique
+  passwordHash     String
+  role             AdminRole          @default(REVIEWER)
+  status           AccountStatus      @default(ACTIVE)
+  twoFactorEnabled Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  sessions         RefreshSession[]
+  auditLogs        AuditLog[]
+
+  @@index([role])
+  @@index([status])
+}
+
+model RefreshSession {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectType         SessionSubjectType
+  userId              String?            @db.Uuid
+  adminUserId         String?            @db.Uuid
+  tokenHash           String
+  tokenFamily         String             @db.Uuid
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedBySessionId String?            @db.Uuid
+  reuseDetectedAt     DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  user                User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adminUser           AdminUser?         @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@unique([tokenHash])
+  @@index([userId])
+  @@index([adminUserId])
+  @@index([tokenFamily])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId String    @db.Uuid
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([adminUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model Category {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  slug             String           @unique
+  description      String?
+  isActive         Boolean          @default(true)
+  sortOrder        Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  vendorCategories VendorCategory[]
+
+  @@index([isActive, sortOrder])
+  @@index([name])
+}
+
+model State {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cities    City[]
+
+  @@index([isActive, name])
+}
+
+model City {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stateId               String              @db.Uuid
+  name                  String
+  slug                  String
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  state                 State               @relation(fields: [stateId], references: [id], onDelete: Restrict)
+  primaryVendorProfiles VendorProfile[]     @relation("VendorPrimaryCity")
+  serviceAreas          VendorServiceArea[]
+
+  @@unique([stateId, slug])
+  @@index([stateId])
+  @@index([isActive, name])
+}
+
+model VendorProfile {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerUserId     String              @unique @db.Uuid
+  businessName    String?
+  slug            String?             @unique
+  legalName       String?
+  description     String?
+  contactEmail    String?
+  contactPhone    String?
+  websiteUrl      String?
+  yearEstablished Int?
+  addressLine1    String?
+  addressLine2    String?
+  postalCode      String?
+  primaryCityId   String?             @db.Uuid
+  status          VendorStatus        @default(DRAFT)
+  submittedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  owner           User                @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  primaryCity     City?               @relation("VendorPrimaryCity", fields: [primaryCityId], references: [id], onDelete: Restrict)
+  categories      VendorCategory[]
+  serviceAreas    VendorServiceArea[]
+  documents       VendorDocument[]
+
+  @@index([ownerUserId])
+  @@index([status])
+  @@index([primaryCityId])
+}
+
+model VendorCategory {
+  vendorId   String        @db.Uuid
+  categoryId String        @db.Uuid
+  createdAt  DateTime      @default(now())
+  vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category   Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([vendorId, categoryId])
+  @@index([categoryId])
+}
+
+model VendorServiceArea {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId  String        @db.Uuid
+  cityId    String        @db.Uuid
+  isPrimary Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  city      City          @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  @@unique([vendorId, cityId])
+  @@index([cityId])
+  @@index([vendorId])
+}
+
+model VendorDocument {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId         String               @db.Uuid
+  type             VendorDocumentType
+  storageKey       String               @unique
+  originalFileName String
+  mimeType         String
+  sizeBytes        Int
+  checksumSha256   String
+  status           VendorDocumentStatus @default(UPLOADED)
+  metadata         Json                 @default("{}")
+  uploadedAt       DateTime             @default(now())
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  vendor           VendorProfile        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@index([type])
+  @@index([status])
+  @@index([uploadedAt])
+}
