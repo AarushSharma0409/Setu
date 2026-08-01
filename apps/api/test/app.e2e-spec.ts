@@ -6,6 +6,7 @@ import request from "supertest";
 
 import { AppModule } from "../src/app/app.module";
 import { PasswordService } from "../src/auth/password.service";
+import { TokenService } from "../src/auth/token.service";
 import { EnvService } from "../src/common/env/env.service";
 import { PrismaService } from "../src/database/prisma.service";
 import { RedisService } from "../src/redis/redis.service";
@@ -26,6 +27,28 @@ interface AdminRecord {
   role: "SUPER_ADMIN" | "OPERATIONS" | "REVIEWER";
   status: "ACTIVE" | "SUSPENDED" | "DISABLED";
   twoFactorEnabled: boolean;
+  twoFactorSecretEncrypted?: string | null;
+  twoFactorConfirmedAt?: Date | null;
+  lastLoginAt?: Date | null;
+  failedLoginCount: number;
+  lockedUntil: Date | null;
+}
+
+interface ChallengeRecord {
+  id: string;
+  adminUserId: string;
+  type: "TOTP_VERIFY" | "TOTP_ENROLLMENT";
+  tokenHash: string;
+  pendingSecretEncrypted?: string | null;
+  expiresAt: Date;
+  usedAt: Date | null;
+}
+
+interface RecoveryRecord {
+  id: string;
+  adminUserId: string;
+  codeHash: string;
+  usedAt: Date | null;
 }
 
 interface SessionRecord {
@@ -123,8 +146,30 @@ class FakePrisma {
   vendorCategories: VendorCategoryRecord[] = [];
   vendorServiceAreas: VendorServiceAreaRecord[] = [];
   vendorDocuments = new Map<string, VendorDocumentRecord>();
+  challenges = new Map<string, ChallengeRecord>();
+  recoveryCodes = new Map<string, RecoveryRecord>();
+  auditLogs: Array<Record<string, unknown>> = [];
+  verificationDecisions: Array<Record<string, unknown>> = [];
   healthy = true;
   nextId = 1;
+
+  private matches<T extends object>(value: T, where: Partial<T>): boolean {
+    return Object.entries(where).every(([key, expected]) => {
+      const actual = value[key as keyof T];
+      if (expected && typeof expected === "object" && "gt" in expected) {
+        return actual instanceof Date && actual > (expected as { gt: Date }).gt;
+      }
+      if (expected && typeof expected === "object" && "gte" in expected) {
+        const range = expected as { gte?: Date; lte?: Date };
+        return (
+          actual instanceof Date &&
+          (!range.gte || actual >= range.gte) &&
+          (!range.lte || actual <= range.lte)
+        );
+      }
+      return actual === expected;
+    });
+  }
 
   constructor() {
     const categoryId = "11111111-1111-4111-8111-111111111111";
@@ -207,6 +252,133 @@ class FakePrisma {
       [...this.admins.values()].find(
         (admin) => admin.id === where.id || admin.email === where.email,
       ) ?? null,
+    update: async ({
+      where,
+      data,
+    }: {
+      where: { id: string };
+      data: Partial<AdminRecord>;
+    }) => {
+      const admin = this.admins.get(where.id);
+      if (!admin) throw new Error("Admin not found");
+      Object.assign(admin, data);
+      return admin;
+    },
+  };
+
+  adminAuthChallenge = {
+    create: async ({
+      data,
+    }: {
+      data: Omit<ChallengeRecord, "usedAt"> & { usedAt?: Date | null };
+    }) => {
+      const challenge = { ...data, usedAt: data.usedAt ?? null };
+      this.challenges.set(challenge.id, challenge);
+      return challenge;
+    },
+    findFirst: async ({ where }: { where: Partial<ChallengeRecord> }) =>
+      [...this.challenges.values()].find((challenge) =>
+        this.matches(challenge, where),
+      ) ?? null,
+    update: async ({
+      where,
+      data,
+    }: {
+      where: { id: string };
+      data: Partial<ChallengeRecord>;
+    }) => {
+      const challenge = this.challenges.get(where.id);
+      if (!challenge) throw new Error("Challenge not found");
+      Object.assign(challenge, data);
+      return challenge;
+    },
+    updateMany: async ({
+      where,
+      data,
+    }: {
+      where: Partial<ChallengeRecord>;
+      data: Partial<ChallengeRecord>;
+    }) => {
+      let count = 0;
+      for (const challenge of this.challenges.values()) {
+        if (this.matches(challenge, where)) {
+          Object.assign(challenge, data);
+          count += 1;
+        }
+      }
+      return { count };
+    },
+  };
+
+  adminRecoveryCode = {
+    findMany: async ({ where }: { where: Partial<RecoveryRecord> }) =>
+      [...this.recoveryCodes.values()].filter((code) =>
+        this.matches(code, where),
+      ),
+    createMany: async ({
+      data,
+    }: {
+      data: Omit<RecoveryRecord, "id" | "usedAt">[];
+    }) => {
+      for (const record of data) {
+        const code = { ...record, id: this.nextUuid(), usedAt: null };
+        this.recoveryCodes.set(code.id, code);
+      }
+      return { count: data.length };
+    },
+    deleteMany: async ({ where }: { where: Partial<RecoveryRecord> }) => {
+      for (const [id, code] of this.recoveryCodes) {
+        if (this.matches(code, where)) this.recoveryCodes.delete(id);
+      }
+      return { count: 1 };
+    },
+    updateMany: async ({
+      where,
+      data,
+    }: {
+      where: Partial<RecoveryRecord>;
+      data: Partial<RecoveryRecord>;
+    }) => {
+      let count = 0;
+      for (const code of this.recoveryCodes.values()) {
+        if (this.matches(code, where)) {
+          Object.assign(code, data);
+          count += 1;
+        }
+      }
+      return { count };
+    },
+  };
+
+  auditLog = {
+    create: async ({ data }: { data: Record<string, unknown> }) => {
+      const record = { ...data, id: this.nextUuid(), createdAt: new Date() };
+      this.auditLogs.push(record);
+      return record;
+    },
+    findMany: async ({
+      where,
+      skip,
+      take,
+    }: {
+      where?: Record<string, unknown>;
+      skip?: number;
+      take?: number;
+    }) =>
+      this.auditLogs
+        .filter((entry) => !where || this.matches(entry, where))
+        .slice(skip ?? 0, (skip ?? 0) + (take ?? 50)),
+    count: async ({ where }: { where?: Record<string, unknown> }) =>
+      this.auditLogs.filter((entry) => !where || this.matches(entry, where))
+        .length,
+  };
+
+  vendorVerificationDecision = {
+    create: async ({ data }: { data: Record<string, unknown> }) => {
+      const record = { ...data, id: this.nextUuid(), createdAt: new Date() };
+      this.verificationDecisions.push(record);
+      return record;
+    },
   };
 
   refreshSession = {
@@ -344,6 +516,50 @@ class FakePrisma {
       }
       Object.assign(vendor, data);
       return this.vendorWithRelations(vendor);
+    },
+    findMany: async ({
+      where,
+      skip,
+      take,
+    }: {
+      where?: Partial<VendorProfileRecord>;
+      skip?: number;
+      take?: number;
+    }) =>
+      [...this.vendorProfiles.values()]
+        .filter((vendor) => !where || this.matches(vendor, where))
+        .slice(skip ?? 0, (skip ?? 0) + (take ?? 100))
+        .map((vendor) => ({
+          ...this.vendorWithRelations(vendor),
+          owner: this.users.get(vendor.ownerUserId),
+          primaryCity: vendor.primaryCityId
+            ? this.cities.get(vendor.primaryCityId)
+            : null,
+          _count: {
+            documents: [...this.vendorDocuments.values()].filter(
+              (doc) => doc.vendorId === vendor.id,
+            ).length,
+          },
+        })),
+    count: async ({ where }: { where?: Partial<VendorProfileRecord> }) =>
+      [...this.vendorProfiles.values()].filter(
+        (vendor) => !where || this.matches(vendor, where),
+      ).length,
+    updateMany: async ({
+      where,
+      data,
+    }: {
+      where: Partial<VendorProfileRecord>;
+      data: Partial<VendorProfileRecord>;
+    }) => {
+      let count = 0;
+      for (const vendor of this.vendorProfiles.values()) {
+        if (this.matches(vendor, where)) {
+          Object.assign(vendor, data);
+          count += 1;
+        }
+      }
+      return { count };
     },
   };
 
@@ -521,6 +737,28 @@ const testEnv = {
     DOCUMENT_MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024,
     DOCUMENT_ALLOWED_MIME_TYPES: ["application/pdf", "image/jpeg", "image/png"],
     SIGNED_URL_TTL_SECONDS: 300,
+    ADMIN_2FA_ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+    ADMIN_AUTH_CHALLENGE_SECRET:
+      "setu-test-admin-auth-challenge-secret-at-least-32-chars",
+    ADMIN_AUTH_CHALLENGE_TTL: "5m",
+    ADMIN_TOTP_ISSUER: "Setu Test",
+    ADMIN_TOTP_WINDOW: 1,
+    ADMIN_LOGIN_MAX_ATTEMPTS: 5,
+    ADMIN_LOGIN_LOCKOUT_SECONDS: 300,
+    ADMIN_2FA_MAX_ATTEMPTS: 5,
+    ADMIN_DOCUMENT_URL_TTL_SECONDS: 120,
+    INQUIRY_IDEMPOTENCY_TTL_SECONDS: 900,
+    JSON_BODY_LIMIT: "1mb",
+    REQUEST_TIMEOUT_MS: 15_000,
+    RATE_LIMIT_ENABLED: true,
+    RATE_LIMIT_REDIS_PREFIX: "setu:ratelimit:",
+    RATE_LIMIT_AUTH_LIMIT: 10,
+    RATE_LIMIT_AUTH_WINDOW_SECONDS: 60,
+    RATE_LIMIT_INQUIRY_LIMIT: 10,
+    RATE_LIMIT_INQUIRY_WINDOW_SECONDS: 60,
+    RATE_LIMIT_UPLOAD_LIMIT: 5,
+    RATE_LIMIT_UPLOAD_WINDOW_SECONDS: 300,
+    SEED_PUBLIC_FIXTURES: false,
   },
   isProduction: false,
   isDevelopmentLike: true,
@@ -535,7 +773,9 @@ async function createApp(envOverride: Partial<EnvService> = testEnv) {
     passwordHash: await passwordService.hash("change-me-local-admin-password"),
     role: "SUPER_ADMIN",
     status: "ACTIVE",
-    twoFactorEnabled: false,
+    twoFactorEnabled: true,
+    failedLoginCount: 0,
+    lockedUntil: null,
   });
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
@@ -638,13 +878,14 @@ describe("Setu API foundation", () => {
       .post("/api/v1/auth/dev-login")
       .send({ email: "dev.user@setu.test" })
       .expect(201);
-    const adminLogin = await request(app.getHttpServer())
-      .post("/api/v1/admin/auth/login")
-      .send({
-        email: "admin.local@setu.test",
-        password: "change-me-local-admin-password",
-      })
-      .expect(201);
+    const adminToken = await app.get(TokenService).signAccessToken({
+      sub: "admin-1",
+      email: "admin.local@setu.test",
+      role: "SUPER_ADMIN",
+      type: "admin",
+      mfa: true,
+      amr: ["pwd", "otp"],
+    });
 
     await request(app.getHttpServer())
       .get("/api/v1/admin/system-status")
@@ -652,12 +893,33 @@ describe("Setu API foundation", () => {
       .expect(401);
     await request(app.getHttpServer())
       .get("/api/v1/users/me")
-      .set("Authorization", `Bearer ${adminLogin.body.accessToken as string}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .expect(401);
     await request(app.getHttpServer())
       .get("/api/v1/admin/system-status")
-      .set("Authorization", `Bearer ${adminLogin.body.accessToken as string}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .expect(200);
+  });
+
+  it("returns an MFA challenge and rejects that challenge on admin business routes", async () => {
+    ({ app } = await createApp());
+
+    const login = await request(app.getHttpServer())
+      .post("/api/v1/admin/auth/login")
+      .send({
+        email: "admin.local@setu.test",
+        password: "change-me-local-admin-password",
+      })
+      .expect(201);
+
+    expect(login.body.accessToken).toBeUndefined();
+    expect(login.body.challengeToken).toEqual(expect.any(String));
+    expect(login.body.nextStep).toBe("TOTP_ENROLLMENT_REQUIRED");
+
+    await request(app.getHttpServer())
+      .get("/api/v1/admin/system-status")
+      .set("Authorization", `Bearer ${login.body.challengeToken as string}`)
+      .expect(401);
   });
 
   it("supports vendor onboarding through submission", async () => {
@@ -742,17 +1004,18 @@ describe("Setu API foundation", () => {
   it("rejects admin tokens on vendor routes", async () => {
     ({ app } = await createApp());
 
-    const adminLogin = await request(app.getHttpServer())
-      .post("/api/v1/admin/auth/login")
-      .send({
-        email: "admin.local@setu.test",
-        password: "change-me-local-admin-password",
-      })
-      .expect(201);
+    const adminToken = await app.get(TokenService).signAccessToken({
+      sub: "admin-1",
+      email: "admin.local@setu.test",
+      role: "SUPER_ADMIN",
+      type: "admin",
+      mfa: true,
+      amr: ["pwd", "otp"],
+    });
 
     await request(app.getHttpServer())
       .get("/api/v1/vendors/me")
-      .set("Authorization", `Bearer ${adminLogin.body.accessToken as string}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .expect(401);
   });
 });

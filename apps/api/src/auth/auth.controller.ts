@@ -13,6 +13,7 @@ import { AuthService } from "./auth.service";
 import { DevLoginDto } from "./dto/dev-login.dto";
 import { RefreshDto } from "./dto/refresh.dto";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { RateLimit } from "../common/decorators/rate-limit.decorator";
 import { EnvService } from "../common/env/env.service";
 import type { AuthenticatedPrincipal } from "../common/guards/authenticated-request";
 import { PublicUserAuthGuard } from "../common/guards/public-user-auth.guard";
@@ -27,6 +28,7 @@ export class AuthController {
   ) {}
 
   @Post("dev-login")
+  @RateLimit({ key: "public-login", limit: 20, windowSeconds: 60 })
   async devLogin(
     @Body() dto: DevLoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -43,6 +45,7 @@ export class AuthController {
   }
 
   @Post("refresh")
+  @RateLimit({ key: "public-refresh", limit: 30, windowSeconds: 60 })
   async refresh(
     @Body() dto: RefreshDto,
     @Req() request: Request,
@@ -62,6 +65,7 @@ export class AuthController {
   }
 
   @Post("logout")
+  @RateLimit({ key: "public-logout", limit: 30, windowSeconds: 60 })
   async logout(
     @Body() dto: RefreshDto,
     @Req() request: Request,

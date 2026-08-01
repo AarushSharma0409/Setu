@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set a production database user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a production database password}
+      POSTGRES_DB: ${POSTGRES_DB:-setu}
+    volumes:
+      - setu_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - setu_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ${SETU_API_IMAGE:-setu-api:latest}
+    restart: unless-stopped
+    env_file: ["${SETU_API_ENV_FILE:?set an API env file path}"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    expose: ["4000"]
+
+  web:
+    image: ${SETU_WEB_IMAGE:-setu-web:latest}
+    restart: unless-stopped
+    env_file: ["${SETU_WEB_ENV_FILE:?set a web env file path}"]
+    depends_on: [api]
+    ports: ["${WEB_PORT:-3000}:3000"]
+
+  admin:
+    image: ${SETU_ADMIN_IMAGE:-setu-admin:latest}
+    restart: unless-stopped
+    env_file: ["${SETU_ADMIN_ENV_FILE:?set an admin env file path}"]
+    depends_on: [api]
+    ports: ["${ADMIN_PORT:-3001}:3001"]
+
+volumes:
+  setu_postgres_data:
+  setu_redis_data:

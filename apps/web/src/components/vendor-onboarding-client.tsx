@@ -14,6 +14,8 @@ import {
   Input,
   LoadingState,
   PageContainer,
+  Progress,
+  StatusBadge,
 } from "@setu/ui";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -171,10 +173,8 @@ export function VendorOnboardingClient({ step }: { step: OnboardingStep }) {
   return (
     <PageContainer className="space-y-6">
       <header className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
-          Sprint 2 vendor onboarding
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-950">
+        <p className="setu-eyebrow">Vendor workspace</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-950">
           {currentStep?.title ?? "Vendor onboarding"}
         </h1>
         <p className="max-w-3xl text-sm leading-6 text-slate-600">
@@ -185,6 +185,19 @@ export function VendorOnboardingClient({ step }: { step: OnboardingStep }) {
       </header>
 
       <StepNav activeStep={step} />
+      {vendor ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusBadge status={vendor.status} />
+          <Progress
+            label="Application progress"
+            value={Math.round(
+              ((onboardingSteps.findIndex((item) => item.key === step) + 1) /
+                onboardingSteps.length) *
+                100,
+            )}
+          />
+        </div>
+      ) : null}
 
       {error ? <ErrorState title="Onboarding issue" detail={error} /> : null}
 
@@ -309,21 +322,26 @@ export function VendorOnboardingClient({ step }: { step: OnboardingStep }) {
 
 function StepNav({ activeStep }: { activeStep: OnboardingStep }) {
   return (
-    <nav className="flex flex-wrap gap-2">
-      {onboardingSteps.map((item) => (
-        <Link
-          className={[
-            "rounded-full px-3 py-1 text-sm",
-            item.key === activeStep
-              ? "bg-slate-950 text-white"
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-          ].join(" ")}
-          href={item.href}
-          key={item.key}
-        >
-          {item.label}
-        </Link>
-      ))}
+    <nav aria-label="Vendor onboarding steps">
+      <ol className="grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        {onboardingSteps.map((item, index) => (
+          <li key={item.key}>
+            <Link
+              className={[
+                "rounded-full px-3 py-1 text-sm",
+                item.key === activeStep
+                  ? "bg-slate-950 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200",
+              ].join(" ")}
+              href={item.href}
+              aria-current={item.key === activeStep ? "step" : undefined}
+            >
+              <span className="mr-1 text-xs opacity-70">{index + 1}</span>
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ol>
     </nav>
   );
 }

@@ -7,3 +7,16 @@ The root `docker-compose.yml` owns Sprint 1 infrastructure:
 - Persistent named volumes for both services
 
 Application processes run outside Docker during local development.
+
+Production-oriented Dockerfiles are provided for the API, public web, and
+admin web in this directory. Build them from the repository root:
+
+```bash
+docker build -f infrastructure/docker/Dockerfile.api -t setu-api:latest .
+docker build -f infrastructure/docker/Dockerfile.web -t setu-web:latest .
+docker build -f infrastructure/docker/Dockerfile.admin -t setu-admin:latest .
+```
+
+`docker-compose.production.yml` is a deployment template. Supply production
+environment files and secrets through the deployment platform; never commit
+them or use the local compose credentials in production.

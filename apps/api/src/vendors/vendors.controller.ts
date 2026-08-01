@@ -20,6 +20,7 @@ import { UpdateVendorProfileDto } from "./dto/update-vendor-profile.dto";
 import { UploadVendorDocumentDto } from "./dto/upload-vendor-document.dto";
 import { VendorsService } from "./vendors.service";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { RateLimit } from "../common/decorators/rate-limit.decorator";
 import type { AuthenticatedPrincipal } from "../common/guards/authenticated-request";
 import { PublicUserAuthGuard } from "../common/guards/public-user-auth.guard";
 
@@ -29,6 +30,7 @@ export class VendorsController {
   constructor(private readonly vendorsService: VendorsService) {}
 
   @Post("onboarding/start")
+  @RateLimit({ key: "onboarding-start", limit: 5, windowSeconds: 300 })
   startOnboarding(@CurrentUser() user: AuthenticatedPrincipal) {
     return this.vendorsService.startOnboarding(user);
   }
@@ -68,7 +70,16 @@ export class VendorsController {
   }
 
   @Post("me/documents")
-  @UseInterceptors(FileInterceptor("file"))
+  @RateLimit({ key: "document-upload", limit: 5, windowSeconds: 300 })
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: {
+        fileSize: 10 * 1024 * 1024,
+        files: 1,
+        fields: 8,
+      },
+    }),
+  )
   uploadDocument(
     @CurrentUser() user: AuthenticatedPrincipal,
     @Body() dto: UploadVendorDocumentDto,
@@ -94,6 +105,7 @@ export class VendorsController {
   }
 
   @Post("me/submit")
+  @RateLimit({ key: "onboarding-submit", limit: 5, windowSeconds: 300 })
   submit(@CurrentUser() user: AuthenticatedPrincipal) {
     return this.vendorsService.submit(user);
   }

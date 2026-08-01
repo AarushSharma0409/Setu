@@ -3,10 +3,15 @@ import type { ReactNode } from "react";
 
 import "./globals.css";
 import { Providers } from "./providers";
+import { PublicShell } from "../components/public-shell";
 
 export const metadata: Metadata = {
   title: "Setu",
-  description: "A PAN-India multi-category vendor directory foundation.",
+  description:
+    "Find approved service providers across India by category and city.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000",
+  ),
 };
 
 export default function RootLayout({
@@ -15,7 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <PublicShell>{children}</PublicShell>
+        </Providers>
       </body>
     </html>
   );

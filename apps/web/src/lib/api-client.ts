@@ -6,6 +6,13 @@ import type {
   VendorDocumentSummary,
   VendorDocumentType,
   VendorProfileSummary,
+  PublicCategory,
+  PublicCity,
+  PublicVendorDetail,
+  PublicVendorListResponse,
+  InquiryDetailContract,
+  InquiryListItem,
+  NotificationContract,
 } from "@setu/types";
 
 import { webEnv } from "./env";
@@ -97,6 +104,22 @@ export const publicApi = {
   logout: () =>
     request<{ ok: boolean }>("/auth/logout", { method: "POST", body: "{}" }),
   categories: () => request<{ categories: CategorySummary[] }>("/categories"),
+  publicCategories: () =>
+    request<{ categories: PublicCategory[] }>("/public/categories"),
+  publicCities: () => request<{ cities: PublicCity[] }>("/public/cities"),
+  publicVendors: (query: Record<string, string | number> = {}) => {
+    const search = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) =>
+      search.set(key, String(value)),
+    );
+    return request<PublicVendorListResponse>(
+      `/public/vendors?${search.toString()}`,
+    );
+  },
+  publicVendor: (slug: string) =>
+    request<{ vendor: PublicVendorDetail }>(
+      `/public/vendors/${encodeURIComponent(slug)}`,
+    ),
   states: () => request<{ states: StateSummary[] }>("/locations/states"),
   cities: (stateId?: string) =>
     request<{ cities: CitySummary[] }>(
@@ -167,10 +190,175 @@ export const publicApi = {
       body: "{}",
       headers: authHeaders(accessToken),
     }),
+  createInquiry: (
+    accessToken: string,
+    input: {
+      vendorId: string;
+      subject: string;
+      message: string;
+      categoryId?: string;
+      serviceCityId?: string;
+      preferredContactMethod?: string;
+    },
+    idempotencyKey: string,
+  ) =>
+    request<{
+      id: string;
+      referenceNumber: string;
+      status: string;
+      vendor: { id: string; slug: string; businessName: string };
+      createdAt: string;
+    }>("/inquiries", {
+      method: "POST",
+      body: JSON.stringify(input),
+      headers: {
+        ...authHeaders(accessToken),
+        "Idempotency-Key": idempotencyKey,
+      },
+    }),
+  inquiries: (
+    accessToken: string,
+    query: Record<string, string | number> = {},
+  ) =>
+    request<{
+      items: InquiryListItem[];
+      pagination: {
+        page: number;
+        pageSize: number;
+        totalItems: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      };
+    }>(`/inquiries?${queryString(query)}`, {
+      headers: authHeaders(accessToken),
+    }),
+  inquiry: (accessToken: string, id: string) =>
+    request<{ inquiry: InquiryDetailContract }>(
+      `/inquiries/${encodeURIComponent(id)}`,
+      { headers: authHeaders(accessToken) },
+    ),
+  sendInquiryMessage: (accessToken: string, id: string, body: string) =>
+    request<{
+      message: {
+        id: string;
+        senderType: string;
+        body: string;
+        createdAt: string;
+      };
+    }>(`/inquiries/${encodeURIComponent(id)}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+      headers: authHeaders(accessToken),
+    }),
+  withdrawInquiry: (accessToken: string, id: string, reason?: string) =>
+    request<{ ok: boolean; status: string }>(
+      `/inquiries/${encodeURIComponent(id)}/withdraw`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+        headers: authHeaders(accessToken),
+      },
+    ),
+  closeInquiry: (accessToken: string, id: string, reason?: string) =>
+    request<{ ok: boolean; status: string }>(
+      `/inquiries/${encodeURIComponent(id)}/close`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+        headers: authHeaders(accessToken),
+      },
+    ),
+  vendorInquiries: (
+    accessToken: string,
+    query: Record<string, string | number> = {},
+  ) =>
+    request<{
+      items: InquiryListItem[];
+      pagination: {
+        page: number;
+        pageSize: number;
+        totalItems: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      };
+    }>(`/vendors/me/inquiries?${queryString(query)}`, {
+      headers: authHeaders(accessToken),
+    }),
+  vendorInquiry: (accessToken: string, id: string) =>
+    request<{ inquiry: InquiryDetailContract }>(
+      `/vendors/me/inquiries/${encodeURIComponent(id)}`,
+      { headers: authHeaders(accessToken) },
+    ),
+  sendVendorInquiryMessage: (accessToken: string, id: string, body: string) =>
+    request<{
+      message: {
+        id: string;
+        senderType: string;
+        body: string;
+        createdAt: string;
+      };
+    }>(`/vendors/me/inquiries/${encodeURIComponent(id)}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+      headers: authHeaders(accessToken),
+    }),
+  updateInquiryStatus: (
+    accessToken: string,
+    id: string,
+    status: string,
+    reason?: string,
+  ) =>
+    request<{ ok: boolean; status: string }>(
+      `/vendors/me/inquiries/${encodeURIComponent(id)}/status`,
+      {
+        method: "POST",
+        body: JSON.stringify({ status, reason }),
+        headers: authHeaders(accessToken),
+      },
+    ),
+  notifications: (accessToken: string, page = 1) =>
+    request<{
+      items: NotificationContract[];
+      unreadCount: number;
+      pagination: {
+        page: number;
+        pageSize: number;
+        totalItems: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      };
+    }>(`/notifications?page=${page}`, { headers: authHeaders(accessToken) }),
+  notificationUnreadCount: (accessToken: string) =>
+    request<{ unreadCount: number }>("/notifications/unread-count", {
+      headers: authHeaders(accessToken),
+    }),
+  markNotificationRead: (accessToken: string, id: string) =>
+    request<{ ok: boolean }>(`/notifications/${encodeURIComponent(id)}/read`, {
+      method: "POST",
+      body: "{}",
+      headers: authHeaders(accessToken),
+    }),
+  markAllNotificationsRead: (accessToken: string) =>
+    request<{ ok: boolean }>("/notifications/read-all", {
+      method: "POST",
+      body: "{}",
+      headers: authHeaders(accessToken),
+    }),
 };
 
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
   };
+}
+
+function queryString(query: Record<string, string | number>): string {
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) =>
+    params.set(key, String(value)),
+  );
+  return params.toString();
 }

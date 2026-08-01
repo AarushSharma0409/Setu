@@ -1,6 +1,14 @@
 "use client";
 
-import { Button, Card, ErrorState, Input, PageContainer } from "@setu/ui";
+import {
+  Button,
+  Card,
+  ErrorState,
+  FormField,
+  Input,
+  PageContainer,
+  PageHeader,
+} from "@setu/ui";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useState, type FormEvent } from "react";
@@ -22,8 +30,16 @@ export default function AdminLoginPage() {
     try {
       const result = await adminApi.login({ email, password });
 
-      if (result.twoFactorRequired) {
-        setError(result.message);
+      if ("challengeToken" in result) {
+        sessionStorage.setItem(
+          "setu_admin_challenge_token",
+          result.challengeToken,
+        );
+        router.replace(
+          result.nextStep === "TOTP_ENROLLMENT_REQUIRED"
+            ? "/login/2fa/setup"
+            : "/login/2fa",
+        );
         return;
       }
 
@@ -38,28 +54,40 @@ export default function AdminLoginPage() {
 
   return (
     <PageContainer className="grid min-h-screen place-items-center py-10">
+      <PageHeader
+        eyebrow="Restricted workspace"
+        title="Setu operations"
+        description="Secure access for vendor verification and platform operations."
+      />
       <Card className="w-full max-w-md">
-        <h1 className="text-2xl font-semibold">Setu operations</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <p className="text-sm leading-6 text-slate-600">
           Internal administration sign-in for local development.
         </p>
         <form
           className="mt-6 space-y-4"
           onSubmit={(event) => void submit(event)}
         >
-          <Input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="admin.local@setu.test"
-            type="email"
-          />
-          <Input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
-            type="password"
-          />
-          <Button disabled={loading} type="submit">
+          <FormField htmlFor="admin-email" label="Admin email" required>
+            <Input
+              id="admin-email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="admin.local@setu.test"
+              type="email"
+              required
+            />
+          </FormField>
+          <FormField htmlFor="admin-password" label="Password" required>
+            <Input
+              id="admin-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Password"
+              type="password"
+              required
+            />
+          </FormField>
+          <Button loading={loading} type="submit">
             {loading ? "Signing in" : "Sign in"}
           </Button>
         </form>

@@ -13,5 +13,7 @@ coverage-e2e
 !.env.example
 !.env.*.example
 *.log
+api-sprint3.err
+api-sprint4.err
 *.tsbuildinfo
 Dockerfile.local

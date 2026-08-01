@@ -1,14 +1,15 @@
 "use client";
 
-import { Button, Card, LoadingState } from "@setu/ui";
+import { Button, LoadingState } from "@setu/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { adminApi, type AdminIdentity } from "../lib/admin-api-client";
 
 export function ProtectedShell({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [admin, setAdmin] = useState<AdminIdentity | null>(null);
   const [checking, setChecking] = useState(true);
 
@@ -34,39 +35,51 @@ export function ProtectedShell({ children }: { children: ReactNode }) {
   }
 
   if (checking) {
-    return <LoadingState label="Checking admin session" />;
+    return <LoadingState label="Checking your operations session" />;
   }
 
   return (
     <div className="space-y-6">
-      <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-slate-500">Signed in</p>
-          <p className="font-medium">{admin?.email}</p>
-        </div>
-        <nav className="flex items-center gap-3">
-          <Link
-            className="text-sm font-medium text-slate-700 hover:text-slate-950"
-            href="/dashboard"
-          >
-            Dashboard
-          </Link>
-          <Link
-            className="text-sm font-medium text-slate-700 hover:text-slate-950"
-            href="/dashboard/system-status"
-          >
-            System status
-          </Link>
+      <header className="setu-admin-header -mx-4 -mt-8 sm:-mx-6 lg:-mx-8">
+        <Link className="setu-admin-brand" href="/dashboard">
+          <span className="setu-brand-mark" aria-hidden="true">
+            S
+          </span>
+          Setu Operations
+        </Link>
+        <div className="flex items-center gap-3">
+          <span className="hidden text-sm text-slate-500 sm:inline">
+            {admin?.email}
+          </span>
           <Button
             type="button"
-            variant="secondary"
+            size="sm"
+            variant="outline"
             onClick={() => void logout()}
           >
-            Logout
+            Log out
           </Button>
+        </div>
+      </header>
+      <div className="setu-admin-layout">
+        <nav aria-label="Operations navigation" className="setu-admin-sidebar">
+          {[
+            ["/dashboard", "Overview"],
+            ["/dashboard/system-status", "System status"],
+            ["/dashboard/vendors", "Verification queue"],
+            ["/dashboard/audit", "Audit log"],
+          ].map(([href, label]) => (
+            <Link
+              className={`setu-admin-nav-link ${pathname === href || pathname.startsWith(`${href}/`) ? "setu-admin-nav-link-active" : ""}`}
+              href={href}
+              key={href}
+            >
+              {label}
+            </Link>
+          ))}
         </nav>
-      </Card>
-      {children}
+        <div className="setu-admin-main space-y-6">{children}</div>
+      </div>
     </div>
   );
 }

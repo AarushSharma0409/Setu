@@ -10,6 +10,7 @@ import type {
   AuthenticatedPrincipal,
   AuthenticatedRequest,
 } from "./authenticated-request";
+import { PrismaService } from "../../database/prisma.service";
 import { EnvService } from "../env/env.service";
 
 @Injectable()
@@ -17,6 +18,7 @@ export class PublicUserAuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly envService: EnvService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -37,6 +39,14 @@ export class PublicUserAuthGuard implements CanActivate {
       );
 
       if (payload.type !== "public") {
+        throw new UnauthorizedException("Authentication required");
+      }
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { status: true },
+      });
+      if (!user || user.status !== "ACTIVE") {
         throw new UnauthorizedException("Authentication required");
       }
 

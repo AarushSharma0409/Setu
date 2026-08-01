@@ -14,9 +14,14 @@
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @setu/api db:generate",
     "db:migrate": "pnpm --filter @setu/api db:migrate",
-    "db:seed": "pnpm --filter @setu/api db:seed"
+    "db:migrate:deploy": "pnpm --filter @setu/api db:deploy",
+    "db:seed": "pnpm --filter @setu/api db:seed:dev",
+    "db:seed:dev": "pnpm --filter @setu/api db:seed:dev",
+    "db:seed:prod": "pnpm --filter @setu/api db:seed:prod",
+    "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1"
   },
   "devDependencies": {
+    "@next/swc-wasm-nodejs": "15.5.22",
     "@setu/config": "workspace:*",
     "prettier": "^3.3.3",
     "turbo": "^2.5.4",

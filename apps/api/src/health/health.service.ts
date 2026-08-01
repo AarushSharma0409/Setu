@@ -49,7 +49,12 @@ export class HealthService {
 
 async function probe(check: () => Promise<boolean>): Promise<boolean> {
   try {
-    return await check();
+    return await Promise.race([
+      check(),
+      new Promise<boolean>((_, reject) =>
+        setTimeout(() => reject(new Error("health check timeout")), 2_000),
+      ),
+    ]);
   } catch {
     return false;
   }

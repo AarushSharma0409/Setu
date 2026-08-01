@@ -1,5 +1,5 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 
 import { Injectable } from "@nestjs/common";
 
@@ -42,7 +42,8 @@ export class LocalObjectStorageService implements ObjectStorageService {
     const normalizedKey = key.replaceAll("\\", "/");
     const target = resolve(this.rootDir, normalizedKey);
 
-    if (!target.startsWith(this.rootDir)) {
+    const relativeTarget = relative(this.rootDir, target);
+    if (relativeTarget.startsWith("..") || relativeTarget.includes(":") || relativeTarget === "") {
       throw new Error("Invalid object storage key");
     }
 

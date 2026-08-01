@@ -8,6 +8,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  Logger,
 } from "@nestjs/common";
 import {
   AccountStatus,
@@ -24,6 +25,7 @@ import { UpdateVendorProfileDto } from "./dto/update-vendor-profile.dto";
 import { EnvService } from "../common/env/env.service";
 import type { AuthenticatedPrincipal } from "../common/guards/authenticated-request";
 import { PrismaService } from "../database/prisma.service";
+import { DocumentScannerService } from "../storage/document-scanner.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
 
 interface UploadedDocumentFile {
@@ -76,9 +78,12 @@ type VendorWithRelations = Prisma.VendorProfileGetPayload<{
 
 @Injectable()
 export class VendorsService {
+  private readonly logger = new Logger(VendorsService.name);
+
   constructor(
     private readonly envService: EnvService,
     private readonly objectStorage: ObjectStorageService,
+    private readonly documentScanner: DocumentScannerService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -251,23 +256,34 @@ export class VendorsService {
       .digest("hex");
     const storageKey = this.createStorageKey(vendor.id, file.originalname);
 
-    await this.objectStorage.putObject({
+    const scan = await this.documentScanner.scan({
       buffer: file.buffer,
-      key: storageKey,
       mimeType: file.mimetype,
     });
 
-    await this.prisma.vendorDocument.create({
-      data: {
-        vendorId: vendor.id,
-        type,
-        storageKey,
-        originalFileName: sanitizeFileName(file.originalname),
+    try {
+      await this.objectStorage.putObject({
+        buffer: file.buffer,
+        key: storageKey,
         mimeType: file.mimetype,
-        sizeBytes: file.size,
-        checksumSha256,
-      },
-    });
+      });
+
+      await this.prisma.vendorDocument.create({
+        data: {
+          vendorId: vendor.id,
+          type,
+          storageKey,
+          originalFileName: sanitizeFileName(file.originalname),
+          mimeType: file.mimetype,
+          sizeBytes: file.size,
+          checksumSha256,
+          metadata: { malwareScan: scan.status },
+        },
+      });
+    } catch (error) {
+      await this.objectStorage.deleteObject(storageKey).catch(() => undefined);
+      throw error;
+    }
 
     return this.getMine(user);
   }
@@ -285,7 +301,18 @@ export class VendorsService {
     await this.prisma.$transaction([
       this.prisma.vendorDocument.delete({ where: { id: document.id } }),
     ]);
-    await this.objectStorage.deleteObject(document.storageKey);
+    try {
+      await this.objectStorage.deleteObject(document.storageKey);
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: "storage_orphan_detected",
+          documentId: document.id,
+          vendorId: vendor.id,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    }
 
     return { ok: true };
   }
@@ -500,7 +527,7 @@ function sanitizeFileName(fileName: string): string {
   return fileName.replace(/[^a-zA-Z0-9._ -]/g, "_").slice(0, 180);
 }
 
-function hasAllowedExtension(fileName: string, mimeType: string): boolean {
+export function hasAllowedExtension(fileName: string, mimeType: string): boolean {
   const extension = extname(fileName).toLowerCase();
   const expectedExtensions: Record<string, string[]> = {
     "application/pdf": [".pdf"],
@@ -511,7 +538,7 @@ function hasAllowedExtension(fileName: string, mimeType: string): boolean {
   return expectedExtensions[mimeType]?.includes(extension) ?? false;
 }
 
-function hasExpectedSignature(buffer: Buffer, mimeType: string): boolean {
+export function hasExpectedSignature(buffer: Buffer, mimeType: string): boolean {
   if (mimeType === "application/pdf") {
     return buffer.subarray(0, 4).toString("utf8") === "%PDF";
   }

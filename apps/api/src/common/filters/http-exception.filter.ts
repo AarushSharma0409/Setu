@@ -9,6 +9,7 @@ import {
 import type { Response } from "express";
 
 import { EnvService } from "../env/env.service";
+import type { AuthenticatedRequest } from "../guards/authenticated-request";
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -18,6 +19,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();
+    const request = host.switchToHttp().getRequest<AuthenticatedRequest>();
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
@@ -33,13 +35,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
+    const safeMessage =
+      status >= 500 && this.envService.isProduction
+        ? "Internal server error"
+        : message;
     response.status(status).json({
-      error:
-        status >= 500 && this.envService.isProduction
-          ? "Internal server error"
-          : message,
-      message,
+      error: safeMessage,
+      message: safeMessage,
       statusCode: status,
+      requestId: request.requestId,
     });
   }
 }

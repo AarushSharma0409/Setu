@@ -20,4 +20,24 @@ describe("validateApiEnv", () => {
       }),
     ).toThrow("Invalid API environment");
   });
+
+  it("rejects local production defaults", () => {
+    expect(() =>
+      validateApiEnv({ ...validEnv, NODE_ENV: "production" }),
+    ).toThrow("must be replaced with a production secret");
+  });
+
+  it("rejects local origins and storage in production", () => {
+    expect(() =>
+      validateApiEnv({
+        ...validEnv,
+        NODE_ENV: "production",
+        JWT_ACCESS_SECRET: "production-access-secret-1234567890",
+        JWT_REFRESH_SECRET: "production-refresh-secret-1234567890",
+        ADMIN_AUTH_CHALLENGE_SECRET: "production-challenge-secret-1234567890",
+        ADMIN_2FA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        OBJECT_STORAGE_PROVIDER: "local",
+      }),
+    ).toThrow("local object storage is not allowed");
+  });
 });

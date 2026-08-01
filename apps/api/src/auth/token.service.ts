@@ -12,6 +12,14 @@ export interface AccessTokenInput {
   phone?: string;
   role: string;
   type: AuthSubjectType;
+  mfa?: boolean;
+  amr?: string[];
+}
+
+export interface AdminChallengeInput {
+  sub: string;
+  challengeId: string;
+  challengeType: "TOTP_VERIFY" | "TOTP_ENROLLMENT";
 }
 
 @Injectable()
@@ -31,6 +39,43 @@ export class TokenService {
       ),
       secret: this.envService.values.JWT_ACCESS_SECRET,
     });
+  }
+
+  async signAdminChallenge(input: AdminChallengeInput): Promise<string> {
+    return this.jwtService.signAsync(
+      { ...input, type: "admin_challenge" },
+      {
+        audience: "setu-admin-challenge",
+        secret: this.envService.values.ADMIN_AUTH_CHALLENGE_SECRET,
+        expiresIn: Math.floor(
+          parseDurationMs(this.envService.values.ADMIN_AUTH_CHALLENGE_TTL) /
+            1000,
+        ),
+      },
+    );
+  }
+
+  async verifyAdminChallenge(token: string): Promise<AdminChallengeInput> {
+    const payload = await this.jwtService.verifyAsync<
+      AdminChallengeInput & { type: string }
+    >(token, {
+      audience: "setu-admin-challenge",
+      secret: this.envService.values.ADMIN_AUTH_CHALLENGE_SECRET,
+    });
+
+    if (payload.type !== "admin_challenge") {
+      throw new Error("Invalid admin challenge");
+    }
+
+    return {
+      sub: payload.sub,
+      challengeId: payload.challengeId,
+      challengeType: payload.challengeType,
+    };
+  }
+
+  hashChallengeToken(token: string): string {
+    return createHash("sha256").update(token).digest("hex");
   }
 
   createRefreshToken(): string {

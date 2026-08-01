@@ -52,34 +52,96 @@ enum VendorDocumentStatus {
   REJECTED
 }
 
+enum AdminAuthChallengeType {
+  TOTP_VERIFY
+  TOTP_ENROLLMENT
+}
+
+enum VendorVerificationDecisionType {
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum InquiryStatus {
+  NEW
+  VIEWED
+  CONTACTED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  WITHDRAWN
+}
+
+enum InquiryActorType {
+  USER
+  VENDOR
+  SYSTEM
+  ADMIN
+}
+
+enum InquiryMessageSenderType {
+  USER
+  VENDOR
+  SYSTEM
+}
+
+enum NotificationRecipientType {
+  USER
+  VENDOR
+}
+
+enum NotificationType {
+  INQUIRY_CREATED
+  INQUIRY_MESSAGE
+  INQUIRY_STATUS_CHANGED
+  INQUIRY_WITHDRAWN
+}
+
 model User {
-  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  phone         String?            @unique
-  email         String?            @unique
-  name          String?
-  role          UserRole           @default(USER)
-  status        AccountStatus      @default(ACTIVE)
-  phoneVerified Boolean            @default(false)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  sessions      RefreshSession[]
-  vendorProfile VendorProfile?
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone                  String?                 @unique
+  email                  String?                 @unique
+  name                   String?
+  role                   UserRole                @default(USER)
+  status                 AccountStatus           @default(ACTIVE)
+  phoneVerified          Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  sessions               RefreshSession[]
+  vendorProfile          VendorProfile?
+  inquiries              Inquiry[]
+  notifications          Notification[]          @relation("UserNotifications")
+  inquiryMessages        InquiryMessage[]        @relation("UserInquiryMessages")
+  statusHistory          InquiryStatusHistory[]  @relation("UserStatusHistory")
+  inquiryIdempotencyKeys InquiryIdempotencyKey[]
 
   @@index([role])
   @@index([status])
 }
 
 model AdminUser {
-  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email            String             @unique
-  passwordHash     String
-  role             AdminRole          @default(REVIEWER)
-  status           AccountStatus      @default(ACTIVE)
-  twoFactorEnabled Boolean            @default(true)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  sessions         RefreshSession[]
-  auditLogs        AuditLog[]
+  id                        String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                     String                       @unique
+  passwordHash              String
+  role                      AdminRole                    @default(REVIEWER)
+  status                    AccountStatus                @default(ACTIVE)
+  twoFactorEnabled          Boolean                      @default(false)
+  twoFactorSecretEncrypted  String?
+  twoFactorSecretKeyVersion Int?
+  twoFactorConfirmedAt      DateTime?
+  lastLoginAt               DateTime?
+  failedLoginCount          Int                          @default(0)
+  lockedUntil               DateTime?
+  createdAt                 DateTime                     @default(now())
+  updatedAt                 DateTime                     @updatedAt
+  sessions                  RefreshSession[]
+  auditLogs                 AuditLog[]
+  authChallenges            AdminAuthChallenge[]
+  recoveryCodes             AdminRecoveryCode[]
+  reviewedVendors           VendorProfile[]              @relation("VendorReviewedBy")
+  suspendedVendors          VendorProfile[]              @relation("VendorSuspendedBy")
+  verificationDecisions     VendorVerificationDecision[]
 
   @@index([role])
   @@index([status])
@@ -115,12 +177,42 @@ model AuditLog {
   entityType  String
   entityId    String?
   metadata    Json      @default("{}")
+  requestId   String?
+  ipAddress   String?
+  userAgent   String?
   createdAt   DateTime  @default(now())
   adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
 
   @@index([adminUserId])
   @@index([entityType, entityId])
+  @@index([action])
   @@index([createdAt])
+}
+
+model AdminAuthChallenge {
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId            String                 @db.Uuid
+  type                   AdminAuthChallengeType
+  tokenHash              String                 @unique
+  pendingSecretEncrypted String?
+  expiresAt              DateTime
+  usedAt                 DateTime?
+  createdAt              DateTime               @default(now())
+  adminUser              AdminUser              @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, type])
+  @@index([expiresAt])
+}
+
+model AdminRecoveryCode {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId String    @db.Uuid
+  codeHash    String
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, usedAt])
 }
 
 model Category {
@@ -133,6 +225,7 @@ model Category {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   vendorCategories VendorCategory[]
+  inquiries        Inquiry[]
 
   @@index([isActive, sortOrder])
   @@index([name])
@@ -161,6 +254,7 @@ model City {
   state                 State               @relation(fields: [stateId], references: [id], onDelete: Restrict)
   primaryVendorProfiles VendorProfile[]     @relation("VendorPrimaryCity")
   serviceAreas          VendorServiceArea[]
+  inquiryServiceCities  Inquiry[]
 
   @@unique([stateId, slug])
   @@index([stateId])
@@ -168,33 +262,66 @@ model City {
 }
 
 model VendorProfile {
-  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ownerUserId     String              @unique @db.Uuid
-  businessName    String?
-  slug            String?             @unique
-  legalName       String?
-  description     String?
-  contactEmail    String?
-  contactPhone    String?
-  websiteUrl      String?
-  yearEstablished Int?
-  addressLine1    String?
-  addressLine2    String?
-  postalCode      String?
-  primaryCityId   String?             @db.Uuid
-  status          VendorStatus        @default(DRAFT)
-  submittedAt     DateTime?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  owner           User                @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
-  primaryCity     City?               @relation("VendorPrimaryCity", fields: [primaryCityId], references: [id], onDelete: Restrict)
-  categories      VendorCategory[]
-  serviceAreas    VendorServiceArea[]
-  documents       VendorDocument[]
+  id                     String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerUserId            String                       @unique @db.Uuid
+  businessName           String?
+  slug                   String?                      @unique
+  legalName              String?
+  description            String?
+  contactEmail           String?
+  contactPhone           String?
+  websiteUrl             String?
+  yearEstablished        Int?
+  addressLine1           String?
+  addressLine2           String?
+  postalCode             String?
+  primaryCityId          String?                      @db.Uuid
+  status                 VendorStatus                 @default(DRAFT)
+  submittedAt            DateTime?
+  reviewedAt             DateTime?
+  reviewedByAdminUserId  String?                      @db.Uuid
+  rejectionReason        String?
+  suspendedAt            DateTime?
+  suspendedByAdminUserId String?                      @db.Uuid
+  suspensionReason       String?
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  owner                  User                         @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  primaryCity            City?                        @relation("VendorPrimaryCity", fields: [primaryCityId], references: [id], onDelete: Restrict)
+  reviewedByAdmin        AdminUser?                   @relation("VendorReviewedBy", fields: [reviewedByAdminUserId], references: [id], onDelete: Restrict)
+  suspendedByAdmin       AdminUser?                   @relation("VendorSuspendedBy", fields: [suspendedByAdminUserId], references: [id], onDelete: Restrict)
+  categories             VendorCategory[]
+  serviceAreas           VendorServiceArea[]
+  documents              VendorDocument[]
+  verificationDecisions  VendorVerificationDecision[]
+  inquiries              Inquiry[]
+  notifications          Notification[]               @relation("VendorNotifications")
+  inquiryMessages        InquiryMessage[]             @relation("VendorInquiryMessages")
+  statusHistory          InquiryStatusHistory[]       @relation("VendorStatusHistory")
 
   @@index([ownerUserId])
   @@index([status])
+  @@index([status, businessName])
+  @@index([status, primaryCityId])
   @@index([primaryCityId])
+  @@index([submittedAt])
+  @@index([reviewedAt])
+}
+
+model VendorVerificationDecision {
+  id          String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId    String                         @db.Uuid
+  adminUserId String                         @db.Uuid
+  decision    VendorVerificationDecisionType
+  reason      String?
+  notes       String?
+  createdAt   DateTime                       @default(now())
+  vendor      VendorProfile                  @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  adminUser   AdminUser                      @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([vendorId, createdAt])
+  @@index([adminUserId, createdAt])
+  @@index([decision])
 }
 
 model VendorCategory {
@@ -242,4 +369,109 @@ model VendorDocument {
   @@index([type])
   @@index([status])
   @@index([uploadedAt])
+}
+
+model Inquiry {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referenceNumber        String                  @unique
+  userId                 String                  @db.Uuid
+  vendorId               String                  @db.Uuid
+  categoryId             String?                 @db.Uuid
+  serviceCityId          String?                 @db.Uuid
+  subject                String
+  status                 InquiryStatus           @default(NEW)
+  source                 String                  @default("PUBLIC_PROFILE")
+  preferredContactMethod String?
+  lastMessageAt          DateTime                @default(now())
+  submittedAt            DateTime                @default(now())
+  closedAt               DateTime?
+  withdrawnAt            DateTime?
+  userReadAt             DateTime?
+  vendorReadAt           DateTime?
+  version                Int                     @default(1)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vendor                 VendorProfile           @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  category               Category?               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  serviceCity            City?                   @relation(fields: [serviceCityId], references: [id], onDelete: Restrict)
+  messages               InquiryMessage[]
+  statusHistory          InquiryStatusHistory[]
+  notifications          Notification[]
+  idempotencyKeys        InquiryIdempotencyKey[]
+
+  @@index([userId, lastMessageAt])
+  @@index([vendorId, lastMessageAt])
+  @@index([status, lastMessageAt])
+  @@index([vendorId, status, lastMessageAt])
+}
+
+model InquiryMessage {
+  id             String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiryId      String                   @db.Uuid
+  senderType     InquiryMessageSenderType
+  senderUserId   String?                  @db.Uuid
+  senderVendorId String?                  @db.Uuid
+  body           String
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  inquiry        Inquiry                  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  senderUser     User?                    @relation("UserInquiryMessages", fields: [senderUserId], references: [id], onDelete: Restrict)
+  senderVendor   VendorProfile?           @relation("VendorInquiryMessages", fields: [senderVendorId], references: [id], onDelete: Restrict)
+
+  @@index([inquiryId, createdAt, id])
+  @@index([senderUserId])
+  @@index([senderVendorId])
+}
+
+model InquiryStatusHistory {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiryId         String           @db.Uuid
+  fromStatus        InquiryStatus?
+  toStatus          InquiryStatus
+  changedByUserId   String?          @db.Uuid
+  changedByVendorId String?          @db.Uuid
+  actorType         InquiryActorType
+  reason            String?
+  createdAt         DateTime         @default(now())
+  inquiry           Inquiry          @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  changedByUser     User?            @relation("UserStatusHistory", fields: [changedByUserId], references: [id], onDelete: Restrict)
+  changedByVendor   VendorProfile?   @relation("VendorStatusHistory", fields: [changedByVendorId], references: [id], onDelete: Restrict)
+
+  @@index([inquiryId, createdAt, id])
+}
+
+model Notification {
+  id            String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipientType NotificationRecipientType
+  userId        String?                   @db.Uuid
+  vendorId      String?                   @db.Uuid
+  inquiryId     String?                   @db.Uuid
+  type          NotificationType
+  title         String
+  body          String
+  readAt        DateTime?
+  createdAt     DateTime                  @default(now())
+  user          User?                     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  vendor        VendorProfile?            @relation("VendorNotifications", fields: [vendorId], references: [id], onDelete: Cascade)
+  inquiry       Inquiry?                  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@index([vendorId, readAt, createdAt])
+  @@index([inquiryId])
+}
+
+model InquiryIdempotencyKey {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  key         String
+  requestHash String
+  inquiryId   String   @db.Uuid
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inquiry     Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([expiresAt])
 }

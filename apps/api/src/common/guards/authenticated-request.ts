@@ -8,8 +8,11 @@ export interface AuthenticatedPrincipal {
   phone?: string;
   role: string;
   type: AuthSubjectType;
+  mfa?: boolean;
+  amr?: string[];
 }
 
 export type AuthenticatedRequest = Request & {
+  requestId?: string;
   auth?: AuthenticatedPrincipal;
 };
