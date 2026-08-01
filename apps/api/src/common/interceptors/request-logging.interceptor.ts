@@ -21,7 +21,8 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse<Response>();
     const requestId = request.headers["x-request-id"];
     const normalizedRequestId =
-      typeof requestId === "string" && /^[a-zA-Z0-9._:-]{8,128}$/.test(requestId)
+      typeof requestId === "string" &&
+      /^[a-zA-Z0-9._:-]{8,128}$/.test(requestId)
         ? requestId
         : randomUUID();
     request.requestId = normalizedRequestId;

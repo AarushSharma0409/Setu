@@ -527,7 +527,10 @@ function sanitizeFileName(fileName: string): string {
   return fileName.replace(/[^a-zA-Z0-9._ -]/g, "_").slice(0, 180);
 }
 
-export function hasAllowedExtension(fileName: string, mimeType: string): boolean {
+export function hasAllowedExtension(
+  fileName: string,
+  mimeType: string,
+): boolean {
   const extension = extname(fileName).toLowerCase();
   const expectedExtensions: Record<string, string[]> = {
     "application/pdf": [".pdf"],
@@ -538,7 +541,10 @@ export function hasAllowedExtension(fileName: string, mimeType: string): boolean
   return expectedExtensions[mimeType]?.includes(extension) ?? false;
 }
 
-export function hasExpectedSignature(buffer: Buffer, mimeType: string): boolean {
+export function hasExpectedSignature(
+  buffer: Buffer,
+  mimeType: string,
+): boolean {
   if (mimeType === "application/pdf") {
     return buffer.subarray(0, 4).toString("utf8") === "%PDF";
   }

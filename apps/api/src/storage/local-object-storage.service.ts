@@ -43,7 +43,11 @@ export class LocalObjectStorageService implements ObjectStorageService {
     const target = resolve(this.rootDir, normalizedKey);
 
     const relativeTarget = relative(this.rootDir, target);
-    if (relativeTarget.startsWith("..") || relativeTarget.includes(":") || relativeTarget === "") {
+    if (
+      relativeTarget.startsWith("..") ||
+      relativeTarget.includes(":") ||
+      relativeTarget === ""
+    ) {
       throw new Error("Invalid object storage key");
     }
 

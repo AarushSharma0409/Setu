@@ -1018,4 +1018,21 @@ describe("Setu API foundation", () => {
       .set("Authorization", `Bearer ${adminToken}`)
       .expect(401);
   });
+
+  it("rejects an existing public token after the account is disabled", async () => {
+    const setup = await createApp();
+    app = setup.app;
+    const login = await request(app.getHttpServer())
+      .post("/api/v1/auth/dev-login")
+      .send({ email: "disabled.user@setu.test" })
+      .expect(201);
+    const user = [...setup.fakePrisma.users.values()][0];
+    if (!user) throw new Error("test user was not created");
+    user.status = "DISABLED";
+
+    await request(app.getHttpServer())
+      .get("/api/v1/users/me")
+      .set("Authorization", `Bearer ${login.body.accessToken as string}`)
+      .expect(401);
+  });
 });

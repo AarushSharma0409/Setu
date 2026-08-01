@@ -13,18 +13,35 @@ import bcrypt from "bcryptjs";
 loadLocalEnv();
 
 const prisma = new PrismaClient();
-const seedMode = process.argv.includes("--mode=prod") ? "production" : "development";
+const seedMode = process.argv.includes("--mode=prod")
+  ? "production"
+  : "development";
 
 async function main() {
   if (seedMode === "production" && process.env.NODE_ENV !== "production") {
     throw new Error("Production seed requires NODE_ENV=production.");
   }
   if (seedMode === "development" && process.env.NODE_ENV === "production") {
-    throw new Error("Development seed is disabled in production. Use db:seed:prod.");
+    throw new Error(
+      "Development seed is disabled in production. Use db:seed:prod.",
+    );
+  }
+  if (seedMode === "production") {
+    if (process.env.ADMIN_SEED_2FA_ENABLED !== "true") {
+      throw new Error("Production seed requires ADMIN_SEED_2FA_ENABLED=true.");
+    }
+    if (!process.env.ADMIN_SEED_EMAIL || !process.env.ADMIN_SEED_PASSWORD) {
+      throw new Error(
+        "Production seed requires ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD.",
+      );
+    }
   }
 
   await seedReferenceData();
-  if (seedMode === "development" && process.env.SEED_PUBLIC_FIXTURES !== "false") {
+  if (
+    seedMode === "development" &&
+    process.env.SEED_PUBLIC_FIXTURES !== "false"
+  ) {
     await seedPublicFixtures();
   }
   await seedDevelopmentAdmin();
@@ -266,10 +283,6 @@ async function seedDevelopmentAdmin() {
     throw new Error(
       "ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD are required to seed a development admin.",
     );
-  }
-
-  if (seedMode === "production" && process.env.ADMIN_SEED_2FA_ENABLED !== "true") {
-    throw new Error("Production seed requires ADMIN_SEED_2FA_ENABLED=true.");
   }
 
   const passwordHash = await bcrypt.hash(password, 12);

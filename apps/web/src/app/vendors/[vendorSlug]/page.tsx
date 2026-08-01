@@ -39,27 +39,44 @@ export default async function VendorPage({ params }: Props) {
             { label: vendor.businessName },
           ]}
         />
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="setu-profile-shell grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div>
-            <div className="flex flex-wrap items-start gap-3">
-              <div>
-                <p className="setu-eyebrow">Approved provider</p>
+            <header className="setu-profile-header">
+              <div className="setu-profile-avatar" aria-hidden="true">
+                {vendor.businessName.slice(0, 1).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="setu-eyebrow">Approved provider</p>
+                  <StatusBadge status="APPROVED" />
+                </div>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight">
                   {vendor.businessName}
                 </h1>
+                <p className="mt-2 text-sm text-slate-600">
+                  ⌖ {vendor.primaryCity.name}, {vendor.primaryCity.stateName}
+                </p>
               </div>
-              <StatusBadge status="APPROVED" />
-            </div>
-            <p className="mt-3 text-slate-600">
-              {vendor.primaryCity.name}, {vendor.primaryCity.stateName}
-            </p>
-            <Card className="mt-8">
+            </header>
+            <nav
+              className="setu-profile-tabs"
+              aria-label="Vendor profile sections"
+            >
+              <a className="setu-profile-tab-active" href="#overview">
+                Overview
+              </a>
+              <a href="#services">Services</a>
+              <a href="#areas">Service areas</a>
+            </nav>
+            <Card className="mt-6" id="overview">
               <h2 className="text-xl font-semibold">About this provider</h2>
               <p className="mt-3 whitespace-pre-line leading-7 text-slate-700">
                 {vendor.description}
               </p>
             </Card>
-            <h2 className="mt-10 text-xl font-semibold">Services</h2>
+            <h2 className="mt-10 text-xl font-semibold" id="services">
+              Services
+            </h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {vendor.categories.map((category) => (
                 <span
@@ -70,7 +87,9 @@ export default async function VendorPage({ params }: Props) {
                 </span>
               ))}
             </div>
-            <h2 className="mt-10 text-xl font-semibold">Service areas</h2>
+            <h2 className="mt-10 text-xl font-semibold" id="areas">
+              Service areas
+            </h2>
             <ul className="mt-3 flex flex-wrap gap-2 text-sm text-slate-600">
               {vendor.serviceAreas.map((city) => (
                 <li
@@ -82,8 +101,8 @@ export default async function VendorPage({ params }: Props) {
               ))}
             </ul>
           </div>
-          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <Card>
+          <div className="setu-profile-aside space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <Card className="setu-profile-info-card">
               <h2 className="text-lg font-semibold">Business information</h2>
               {vendor.legalName ? (
                 <p className="mt-4 text-sm text-slate-600">

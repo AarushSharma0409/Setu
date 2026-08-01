@@ -2,19 +2,17 @@ import "@testing-library/jest-dom/vitest";
 
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import HomePage from "./page";
-
-vi.mock("../components/api-status", () => ({
-  ApiStatus: () => <div>API connectivity</div>,
-}));
 
 describe("HomePage", () => {
   it("renders the Setu foundation page", () => {
     render(<HomePage />);
 
     expect(screen.getByRole("heading", { name: "Setu" })).toBeInTheDocument();
-    expect(screen.getByText("API connectivity")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /find trusted local providers/i }),
+    ).toBeInTheDocument();
   });
 });

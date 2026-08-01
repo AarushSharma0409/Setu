@@ -10,9 +10,11 @@ separate admin verification boundary: mandatory TOTP MFA, recovery codes,
 permission-checked vendor review, private document access, transactional
 approval/rejection/suspension decisions, and append-only audit logs.
 
-Marketplace discovery, public vendor profiles, inquiries, reviews,
-subscriptions, billing, insurance, and production cloud integrations remain
-intentionally out of scope.
+Public discovery, approved vendor profiles, vendor onboarding, verification,
+inquiries, messaging, and in-app notifications are implemented in the
+controlled non-insurance MVP. Reviews, subscriptions, billing, insurance,
+production object-storage integration, and other excluded product features
+remain intentionally out of scope.
 
 ## Architecture summary
 
@@ -111,6 +113,9 @@ Required local variables include:
 - `ADMIN_LOGIN_LOCKOUT_SECONDS`
 - `ADMIN_2FA_MAX_ATTEMPTS`
 - `ADMIN_DOCUMENT_URL_TTL_SECONDS`
+- `JSON_BODY_LIMIT`
+- `REQUEST_TIMEOUT_MS`
+- `RATE_LIMIT_ENABLED` and the `RATE_LIMIT_*` limits/windows
 
 The storage variables also include optional S3-compatible placeholders:
 `OBJECT_STORAGE_BUCKET`, `OBJECT_STORAGE_ENDPOINT`,
@@ -466,8 +471,9 @@ POST /api/v1/notifications/read-all
 result are retained for the configured `INQUIRY_IDEMPOTENCY_TTL_SECONDS`
 (900 seconds by default), so safe retries return the same inquiry without
 duplicating a lead. Bodies are plain text and are rendered as text; HTML and
-Markdown are not accepted or rendered. The existing global throttler provides
-basic request limiting for authentication and inquiry traffic.
+Markdown are not accepted or rendered. Redis-backed endpoint limits protect
+authentication, onboarding, uploads, discovery, inquiries, messaging, and
+notification polling with `429` responses and retry headers.
 
 ### Lifecycle and privacy
 

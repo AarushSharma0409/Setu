@@ -179,6 +179,8 @@ export class AdminAuthService {
           twoFactorSecretKeyVersion: 1,
           twoFactorConfirmedAt: new Date(),
           lastLoginAt: new Date(),
+          failedLoginCount: 0,
+          lockedUntil: null,
         },
       });
       await tx.adminRecoveryCode.deleteMany({
@@ -240,7 +242,7 @@ export class AdminAuthService {
     await this.consumeChallenge(challenge, challengeToken);
     await this.prisma.adminUser.update({
       where: { id: admin.id },
-      data: { lastLoginAt: new Date() },
+      data: { lastLoginAt: new Date(), failedLoginCount: 0, lockedUntil: null },
     });
     await this.auditService.record({
       adminUserId: admin.id,
@@ -289,7 +291,7 @@ export class AdminAuthService {
       if (consumedCode.count !== 1) {
         throw new UnauthorizedException("Invalid recovery code");
       }
-      await tx.adminAuthChallenge.updateMany({
+      const consumedChallenge = await tx.adminAuthChallenge.updateMany({
         where: {
           id: challenge.id,
           tokenHash: this.tokenService.hashChallengeToken(challengeToken),
@@ -298,9 +300,16 @@ export class AdminAuthService {
         },
         data: { usedAt: new Date() },
       });
+      if (consumedChallenge.count !== 1) {
+        throw new UnauthorizedException("Authentication challenge expired");
+      }
       await tx.adminUser.update({
         where: { id: admin.id },
-        data: { lastLoginAt: new Date() },
+        data: {
+          lastLoginAt: new Date(),
+          failedLoginCount: 0,
+          lockedUntil: null,
+        },
       });
       await tx.auditLog.create({
         data: {

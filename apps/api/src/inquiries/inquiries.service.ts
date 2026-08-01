@@ -73,19 +73,24 @@ export class InquiriesService {
       subject: dto.subject.trim(),
       message: dto.message.trim(),
     };
+    const normalizedIdempotencyKey = idempotencyKey?.trim();
+    if (
+      normalizedIdempotencyKey &&
+      !/^[a-zA-Z0-9._:-]{1,160}$/.test(normalizedIdempotencyKey)
+    ) {
+      throw new BadRequestException("Idempotency-Key is invalid");
+    }
     const requestHash = createHash("sha256")
       .update(JSON.stringify(normalized))
       .digest("hex");
-    if (idempotencyKey && idempotencyKey.length > 160)
-      throw new BadRequestException("Idempotency-Key is too long");
 
     try {
       const created = await this.prisma.$transaction(async (tx) => {
-        if (idempotencyKey) {
+        if (normalizedIdempotencyKey) {
           const existingKey = await tx.inquiryIdempotencyKey.findFirst({
             where: {
               userId: user.sub,
-              key: idempotencyKey,
+              key: normalizedIdempotencyKey,
               expiresAt: { gt: new Date() },
             },
             include: { inquiry: true },
@@ -167,11 +172,11 @@ export class InquiriesService {
             body: `New inquiry ${referenceNumber} received.`,
           },
         });
-        if (idempotencyKey)
+        if (normalizedIdempotencyKey)
           await tx.inquiryIdempotencyKey.create({
             data: {
               userId: user.sub,
-              key: idempotencyKey,
+              key: normalizedIdempotencyKey,
               requestHash,
               inquiryId: inquiry.id,
               expiresAt: new Date(
@@ -184,9 +189,9 @@ export class InquiriesService {
       });
       return this.createdView(created.id);
     } catch (error) {
-      if (isPrismaConflict(error) && idempotencyKey) {
+      if (isPrismaConflict(error) && normalizedIdempotencyKey) {
         const existing = await this.prisma.inquiryIdempotencyKey.findFirst({
-          where: { userId: user.sub, key: idempotencyKey },
+          where: { userId: user.sub, key: normalizedIdempotencyKey },
           select: { inquiryId: true, requestHash: true },
         });
         if (existing?.requestHash === requestHash)

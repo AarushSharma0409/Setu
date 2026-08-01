@@ -14,7 +14,10 @@ export interface DocumentScanResult {
 export class DocumentScannerService {
   private readonly logger = new Logger(DocumentScannerService.name);
 
-  scan(input: { buffer: Buffer; mimeType: string }): Promise<DocumentScanResult> {
+  scan(input: {
+    buffer: Buffer;
+    mimeType: string;
+  }): Promise<DocumentScanResult> {
     this.logger.debug(`Document scan boundary invoked for ${input.mimeType}`);
     return Promise.resolve({ status: "not_configured" });
   }

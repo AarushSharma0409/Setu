@@ -1,6 +1,7 @@
 import "reflect-metadata";
 
 import type { Server } from "node:http";
+
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import cookieParser from "cookie-parser";
@@ -18,12 +19,19 @@ async function bootstrap() {
   app.use(helmet());
   app.use(cookieParser());
   app.use(express.json({ limit: env.values.JSON_BODY_LIMIT }));
-  app.use(express.urlencoded({
-    extended: true,
-    limit: env.values.JSON_BODY_LIMIT,
-  }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: env.values.JSON_BODY_LIMIT,
+    }),
+  );
   app.enableCors({
-    allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "X-Request-Id"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Idempotency-Key",
+      "X-Request-Id",
+    ],
     credentials: true,
     methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     origin: env.values.CORS_ALLOWED_ORIGINS,

@@ -65,6 +65,7 @@ export class InquiriesController {
   }
 
   @Post("inquiries/:inquiryId/withdraw")
+  @RateLimit({ key: "inquiry-transition", limit: 20, windowSeconds: 60 })
   withdraw(
     @CurrentUser() user: AuthenticatedPrincipal,
     @Param("inquiryId", ParseUUIDPipe) id: string,
@@ -74,6 +75,7 @@ export class InquiriesController {
   }
 
   @Post("inquiries/:inquiryId/close")
+  @RateLimit({ key: "inquiry-transition", limit: 20, windowSeconds: 60 })
   close(
     @CurrentUser() user: AuthenticatedPrincipal,
     @Param("inquiryId", ParseUUIDPipe) id: string,
@@ -109,6 +111,7 @@ export class InquiriesController {
   }
 
   @Post("vendors/me/inquiries/:inquiryId/status")
+  @RateLimit({ key: "vendor-status", limit: 20, windowSeconds: 60 })
   vendorStatus(
     @CurrentUser() user: AuthenticatedPrincipal,
     @Param("inquiryId", ParseUUIDPipe) id: string,

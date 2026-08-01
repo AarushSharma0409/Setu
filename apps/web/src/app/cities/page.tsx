@@ -28,7 +28,7 @@ export default async function CitiesPage() {
             href={`/cities/${city.stateCode.toLowerCase()}/${city.slug}`}
             key={city.id}
           >
-            <Card className="h-full transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
+            <Card className="setu-card-interactive h-full">
               <h2 className="font-semibold">{city.name}</h2>
               <p className="mt-2 text-sm text-slate-600">{city.stateName}</p>
             </Card>

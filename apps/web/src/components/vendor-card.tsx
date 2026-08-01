@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export function VendorCard({ vendor }: { vendor: PublicVendorSummary }) {
   return (
-    <Card className="group flex h-full flex-col gap-4 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
+    <Card className="setu-card-interactive group flex h-full flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <h2 className="line-clamp-2 text-lg font-semibold text-slate-950">
           {vendor.businessName}
@@ -30,7 +30,7 @@ export function VendorCard({ vendor }: { vendor: PublicVendorSummary }) {
       </div>
       <Link
         href={`/vendors/${vendor.slug}`}
-        className="mt-1 text-sm font-semibold text-blue-700 underline-offset-4 hover:underline focus-visible:rounded focus-visible:outline"
+        className="mt-1 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline focus-visible:rounded focus-visible:outline"
       >
         View {vendor.businessName}
       </Link>

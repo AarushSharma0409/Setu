@@ -18,6 +18,7 @@ body {
   justify-content: space-between;
   min-height: 4.25rem;
   padding: 0 1rem;
+  box-shadow: var(--setu-shadow-sm);
 }
 .setu-admin-brand {
   align-items: center;
@@ -36,6 +37,7 @@ body {
   border: 1px solid var(--setu-border);
   border-radius: var(--setu-radius-lg);
   padding: 0.75rem;
+  box-shadow: var(--setu-shadow-sm);
 }
 .setu-admin-nav-link {
   border-radius: var(--setu-radius-md);
@@ -48,7 +50,7 @@ body {
 .setu-admin-nav-link:hover,
 .setu-admin-nav-link-active {
   background: var(--setu-secondary);
-  color: #12316e;
+  color: var(--setu-primary-800);
 }
 .setu-admin-main {
   min-width: 0;

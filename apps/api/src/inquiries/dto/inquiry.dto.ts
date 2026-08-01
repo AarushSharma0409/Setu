@@ -8,6 +8,7 @@ import {
   IsUUID,
   Max,
   MaxLength,
+  Matches,
   Min,
   MinLength,
 } from "class-validator";
@@ -29,11 +30,13 @@ export class CreateInquiryDto {
   @IsString()
   @MinLength(5)
   @MaxLength(160)
+  @Matches(/\S/)
   subject!: string;
 
   @IsString()
   @MinLength(20)
   @MaxLength(4000)
+  @Matches(/\S/)
   message!: string;
 
   @IsOptional()
@@ -93,6 +96,7 @@ export class InquiryMessageDto {
   @IsString()
   @MinLength(1)
   @MaxLength(4000)
+  @Matches(/\S/)
   body!: string;
 }
 

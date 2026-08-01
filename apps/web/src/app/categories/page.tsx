@@ -26,9 +26,9 @@ export default async function CategoriesPage() {
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => (
           <Link href={`/categories/${category.slug}`} key={category.id}>
-            <Card className="h-full transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
+            <Card className="setu-card-interactive h-full">
               <div
-                className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-blue-50 font-bold text-blue-700"
+                className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-violet-50 font-bold text-violet-700"
                 aria-hidden="true"
               >
                 {category.name.slice(0, 1)}

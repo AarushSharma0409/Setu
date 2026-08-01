@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request, Response } from "express";
@@ -41,15 +42,29 @@ export class RateLimitGuard implements CanActivate {
     const consume = this.redis.consumeRateLimit?.bind(this.redis);
     if (!consume) return true;
 
-    const result = await consume(key, options);
+    let result: Awaited<ReturnType<RedisService["consumeRateLimit"]>>;
+    try {
+      result = await consume(key, options);
+    } catch {
+      if (this.env.isProduction) {
+        throw new ServiceUnavailableException("Rate limiting unavailable");
+      }
+      return true;
+    }
     response.setHeader("X-RateLimit-Limit", String(options.limit));
     response.setHeader("X-RateLimit-Remaining", String(result.remaining));
     response.setHeader("X-RateLimit-Reset", String(result.resetAt));
 
     if (!result.allowed) {
-      const retryAfter = Math.max(1, result.resetAt - Math.floor(Date.now() / 1000));
+      const retryAfter = Math.max(
+        1,
+        result.resetAt - Math.floor(Date.now() / 1000),
+      );
       response.setHeader("Retry-After", String(retryAfter));
-      throw new HttpException("Too many requests", HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        "Too many requests",
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     return true;
@@ -57,9 +72,7 @@ export class RateLimitGuard implements CanActivate {
 }
 
 function clientKey(request: Request): string {
-  const forwarded = request.headers["x-forwarded-for"];
-  const forwardedValue = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-  return (forwardedValue?.split(",")[0] ?? request.ip ?? "unknown")
+  return (request.ip ?? request.socket.remoteAddress ?? "unknown")
     .trim()
     .replace(/[^a-zA-Z0-9:._-]/g, "_")
     .slice(0, 120);

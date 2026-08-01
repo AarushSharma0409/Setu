@@ -100,7 +100,7 @@ export default function AdminVendorsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <Link
-                        className="font-semibold text-blue-700 underline-offset-4 hover:underline"
+                        className="font-semibold text-violet-700 underline-offset-4 hover:underline"
                         href={`/dashboard/vendors/${vendor.vendorId}`}
                       >
                         {vendor.businessName ?? "Unnamed vendor"}

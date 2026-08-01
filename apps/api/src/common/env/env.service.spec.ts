@@ -35,7 +35,8 @@ describe("validateApiEnv", () => {
         JWT_ACCESS_SECRET: "production-access-secret-1234567890",
         JWT_REFRESH_SECRET: "production-refresh-secret-1234567890",
         ADMIN_AUTH_CHALLENGE_SECRET: "production-challenge-secret-1234567890",
-        ADMIN_2FA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        ADMIN_2FA_ENCRYPTION_KEY:
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
         OBJECT_STORAGE_PROVIDER: "local",
       }),
     ).toThrow("local object storage is not allowed");

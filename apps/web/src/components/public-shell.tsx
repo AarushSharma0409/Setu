@@ -58,6 +58,13 @@ export function PublicShell({ children }: { children: ReactNode }) {
             id="public-navigation"
           >
             <Link
+              className={linkClass("/")}
+              href="/"
+              onClick={() => setOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
               className={linkClass("/categories")}
               href="/categories"
               onClick={() => setOpen(false)}
@@ -65,25 +72,25 @@ export function PublicShell({ children }: { children: ReactNode }) {
               Categories
             </Link>
             <Link
-              className={linkClass("/cities")}
-              href="/cities"
+              className="setu-nav-link"
+              href="/#how-it-works"
               onClick={() => setOpen(false)}
             >
-              Cities
+              How it works
             </Link>
             <Link
-              className={linkClass("/search")}
-              href="/search"
+              className="setu-nav-link"
+              href="/#about"
               onClick={() => setOpen(false)}
             >
-              Find a vendor
+              About Setu
             </Link>
             <Link
-              className={linkClass("/vendor/onboarding")}
-              href="/vendor/onboarding"
+              className="setu-nav-link"
+              href="/#contact"
               onClick={() => setOpen(false)}
             >
-              Become a vendor
+              Contact
             </Link>
             {authenticated ? (
               <>
@@ -117,13 +124,22 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 </Button>
               </>
             ) : (
-              <Link
-                className="setu-button setu-button-primary setu-button-sm"
-                href="/dev-auth"
-                onClick={() => setOpen(false)}
-              >
-                Sign in
-              </Link>
+              <>
+                <Link
+                  className="setu-nav-login"
+                  href="/dev-auth"
+                  onClick={() => setOpen(false)}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  className="setu-button setu-button-primary setu-button-sm"
+                  href="/dev-auth"
+                  onClick={() => setOpen(false)}
+                >
+                  Get started
+                </Link>
+              </>
             )}
           </nav>
         </div>

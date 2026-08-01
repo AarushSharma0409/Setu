@@ -17,6 +17,10 @@ export class AdminSystemController {
     return {
       application: "setu-api",
       checkedAt: new Date().toISOString(),
+      process: {
+        uptimeSeconds: Math.round(process.uptime()),
+        memoryUsedMb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      },
       health: await this.healthService.health(),
     };
   }

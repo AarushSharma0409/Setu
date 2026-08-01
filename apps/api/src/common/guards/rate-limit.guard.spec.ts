@@ -37,9 +37,6 @@ describe("RateLimitGuard", () => {
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       HttpException,
     );
-    expect(response.setHeader).toHaveBeenCalledWith(
-      "X-RateLimit-Limit",
-      "1",
-    );
+    expect(response.setHeader).toHaveBeenCalledWith("X-RateLimit-Limit", "1");
   });
 });

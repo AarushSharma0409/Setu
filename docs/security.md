@@ -15,8 +15,10 @@
 
 Global validation rejects non-whitelisted fields. JSON and URL-encoded bodies
 have explicit limits, uploads are capped to one 10 MiB file, and Redis-backed
-limits protect authentication, onboarding, uploads, discovery, inquiry
-creation, and messaging. Rate-limited responses include `Retry-After`.
+IP limits protect authentication, onboarding, uploads, discovery, inquiry
+creation, messaging, and notification polling. Rate-limited responses include
+`Retry-After`; a trusted gateway should add principal-aware limits in
+production.
 
 ## Documents
 

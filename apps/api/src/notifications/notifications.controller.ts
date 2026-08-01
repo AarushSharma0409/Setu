@@ -10,11 +10,13 @@ import {
 
 import { NotificationsService } from "./notifications.service";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { RateLimit } from "../common/decorators/rate-limit.decorator";
 import type { AuthenticatedPrincipal } from "../common/guards/authenticated-request";
 import { PublicUserAuthGuard } from "../common/guards/public-user-auth.guard";
 
 @Controller("notifications")
 @UseGuards(PublicUserAuthGuard)
+@RateLimit({ key: "notifications", limit: 60, windowSeconds: 60 })
 export class NotificationsController {
   constructor(private readonly notifications: NotificationsService) {}
 

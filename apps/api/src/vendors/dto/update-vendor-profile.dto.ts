@@ -7,6 +7,7 @@ import {
   IsUrl,
   IsUUID,
   Length,
+  Matches,
   Max,
   Min,
 } from "class-validator";
@@ -58,6 +59,7 @@ export class UpdateVendorProfileDto {
   @IsOptional()
   @IsString()
   @Length(4, 12)
+  @Matches(/^[1-9][0-9]{5}$/)
   postalCode?: string;
 
   @IsOptional()

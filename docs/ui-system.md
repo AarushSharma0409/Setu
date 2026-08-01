@@ -19,16 +19,18 @@ dimensions, radius, elevation, motion, focus, and layout widths. Pages should
 use the shared primitives and semantic variables instead of introducing new
 unrelated colors.
 
-Core semantic colors include `--setu-primary`, `--setu-success`,
+The primary scale is violet (`--setu-primary-50` through
+`--setu-primary-900`) with `--setu-primary` mapped to the 600 step. Core
+semantic colors include `--setu-primary`, `--setu-success`,
 `--setu-warning`, `--setu-danger`, `--setu-info`, `--setu-border`, and
 `--setu-focus-ring`. Reduced-motion users receive near-zero animation and
 transition durations.
 
 ## Typography and spacing
 
-The interface uses the system sans-serif stack already supplied by the browser,
+The interface uses Inter/Segoe UI/Geist when available, with a system sans-serif fallback,
 with a limited scale: page titles, section titles, body, small body, captions,
-labels, and button text. Page containers use a 72rem maximum width and narrow
+labels, and button text. Page containers use an 80rem maximum width and narrow
 reading content to approximately 48rem. Cards use medium/large radius and
 restrained shadows.
 
