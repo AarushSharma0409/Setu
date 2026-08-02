@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer";
 import { IsString, Matches, MinLength } from "class-validator";
 
 export class AdminTwoFactorChallengeDto {
@@ -7,6 +8,9 @@ export class AdminTwoFactorChallengeDto {
 }
 
 export class AdminTwoFactorVerifyDto extends AdminTwoFactorChallengeDto {
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === "string" ? value.replace(/\s/g, "") : value,
+  )
   @IsString()
   @Matches(/^\d{6}$/)
   code!: string;

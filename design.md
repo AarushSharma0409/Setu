@@ -6,15 +6,16 @@ This document defines the visual language, interaction model, responsive behavio
 
 The goal is to make Setu feel like a complete, trustworthy marketplace product rather than a collection of individually implemented screens.
 
-The visual direction is based on a modern service-marketplace experience with:
+The visual direction is based on a modern, immersive service-marketplace experience with:
 
 - White and soft-neutral surfaces
-- Violet brand accents
+- Violet brand accents with restrained luminous highlights
 - Rounded cards and controls
 - Generous spacing
 - Clear typography
-- Subtle depth
-- Smooth motion
+- Layered depth and spatial composition
+- Smooth, choreographed motion
+- Tactile microinteractions
 - Mobile-first interaction
 
 The design must support four related experiences:
@@ -48,9 +49,9 @@ Use the same spacing, typography, color, status, and component conventions throu
 
 Public and vendor experiences must work comfortably on narrow screens. Admin workflows must remain usable on tablets.
 
-### Motion with purpose
+### Immersion with purpose
 
-Animation should clarify state changes and improve continuity, not decorate the interface.
+The product should feel alive through depth, continuity, and responsive motion. Animation must clarify relationships, acknowledge input, and preserve context—not become visual noise or delay task completion.
 
 ### Accessible by default
 
@@ -657,52 +658,272 @@ Metric cards for:
 
 ---
 
-## 18. Motion and Animation
+## 17.5 Immersive Visual Layers
 
-Motion must be subtle and purposeful.
+The interface should gain visual richness through controlled layering rather than excessive decoration.
 
-### Durations
+### Hero environment
+
+- Use one large soft violet glow and one secondary neutral glow.
+- Add abstract bridge or connection motifs that support the “Setu” name without resembling government symbols.
+- Compose two or three floating preview cards showing real product concepts such as a vendor card, inquiry update, or verified profile.
+- Keep foreground text on a stable high-contrast plane.
+- Use masks and gradients to fade decorative layers before they interfere with content.
+
+### Premium surfaces
+
+Use a hierarchy of surfaces:
 
 ```text
-Micro interaction: 120–160 ms
-Standard transition: 180–240 ms
-Overlay/dialog: 200–260 ms
-Section reveal: 250–400 ms
+Base canvas
+Raised section
+Interactive card
+Overlay
+Focused action surface
 ```
 
-### Easing
+Interactive cards may use a very soft accent border, a pointer spotlight, and a small elevation transition. Standard form cards should remain calm and predictable.
+
+### Visual storytelling
+
+Use compact, real product previews to explain value:
+
+- Discovery preview: category, city, and approved vendors
+- Trust preview: verification state and transparent explanation
+- Inquiry preview: message and status continuity
+- Vendor preview: onboarding progress and lead inbox
+
+Do not include features that do not exist in the MVP.
+
+### Texture and gradients
+
+- Allow restrained radial gradients and low-opacity noise texture on marketing surfaces.
+- Avoid full-page gradients behind dense application content.
+- Avoid glassmorphism on forms, tables, dialogs, and document review.
+- Decorative layers must never reduce contrast or readability.
+
+---
+
+## 18. Immersive Motion and Interaction System
+
+Setu should feel polished, spatial, and responsive without becoming theatrical. Motion is part of the product language and must be designed as a system.
+
+### Recommended implementation
+
+Use the existing animation stack when suitable. If no capable library exists, prefer **Motion for React** through `motion/react` for React components.
+
+Use Motion for:
+
+- Shared-layout transitions
+- Presence and exit animations
+- Spring-based interactive feedback
+- Scroll-triggered section reveals
+- Staggered list and card entrances
+- Animated drawers, dialogs, tabs, and filters
+- Number and status transitions
+
+Use CSS transitions for simple hover, focus, color, opacity, and shadow changes. Do not use JavaScript animation where CSS is sufficient.
+
+### Motion tokens
+
+```text
+Instant feedback:     80–120 ms
+Micro interaction:  120–180 ms
+Standard transition: 180–260 ms
+Overlay/dialog:      220–320 ms
+Section reveal:      320–520 ms
+Hero choreography:   500–900 ms maximum
+```
 
 ```css
-cubic-bezier(0.22, 1, 0.36, 1)
+--ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+--ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+--ease-exit: cubic-bezier(0.4, 0, 1, 1);
 ```
 
-### Approved use cases
+Recommended spring profiles:
 
-- Button hover and press
-- Card hover
-- Drawer entry
-- Dialog entry
-- Dropdown menu
-- Tab indicator
-- Toast entry and exit
-- Skeleton transition
-- Step changes
-- New message appearance
-- Filter chip changes
+```text
+Tactile:  stiffness 420, damping 30, mass 0.7
+Layout:   stiffness 300, damping 32, mass 0.9
+Gentle:   stiffness 180, damping 24, mass 1.0
+```
 
-### Avoid
+Treat these as starting points, not arbitrary per-component settings. Centralize them in motion utilities.
 
-- Long page entrance animations
-- Bouncing effects
-- Repeated animation on every render
-- Decorative status animations
-- Motion that delays interaction
+### Immersive homepage choreography
+
+The public homepage may use:
+
+- A soft animated violet radial glow behind the hero
+- Very slow ambient gradient movement with low opacity
+- Layered vendor-preview cards with small depth offsets
+- Pointer-responsive parallax limited to 4–8 px on capable desktop devices
+- A search panel that settles into place on first load
+- Staggered category-card reveal as the section enters the viewport
+- Subtle icon drift or pulse used once, not continuously
+- A search-button press transition that visually carries into results
+
+The hero must remain fully understandable and usable when animation is disabled.
+
+### Spatial depth
+
+Create depth using restrained combinations of:
+
+- Overlapping surfaces
+- Soft blurred background shapes
+- Border contrast
+- Small elevation changes
+- Scale changes of approximately 0.98–1.02
+- Pointer spotlight effects on premium cards
+- Foreground/background motion at different speeds
+
+Do not use aggressive 3D rotation. Card tilt should stay below approximately 1.5 degrees and must be disabled on touch devices and reduced-motion settings.
+
+### Shared-layout transitions
+
+Use shared element or layout animations where they improve continuity:
+
+- Selected category chip into active filter chip
+- Vendor card image or identity block into vendor profile header
+- Inquiry list item into inquiry detail header
+- Notification item removal after mark-read
+- Onboarding step indicator progression
+- Mobile filter trigger into filter drawer
+
+Do not block navigation waiting for animation. The route and data state remain authoritative.
+
+### Component microinteractions
+
+#### Buttons
+
+- Hover: slight elevation or background shift
+- Press: scale to approximately `0.98`
+- Loading: transition label into spinner without changing width
+- Success where appropriate: brief icon confirmation, then settle
+
+#### Cards
+
+- Hover: translate upward by 2–4 px with border and shadow refinement
+- Focus-visible: equivalent non-pointer emphasis
+- Optional desktop spotlight follows pointer with very low-opacity radial highlight
+- Never make operational admin rows float dramatically
+
+#### Inputs and selects
+
+- Smooth focus-ring appearance
+- Label and helper-state transitions
+- Search suggestions enter with staggered opacity and vertical movement
+- Validation error appears without shaking the entire form
+
+A short horizontal nudge may be used only for a failed one-time confirmation action, never repeatedly.
+
+#### Tabs and filters
+
+- Shared animated active indicator
+- Filter chips animate addition and removal
+- Result count crossfades or increments smoothly
+- Filter drawer uses opacity plus short-axis movement
+
+#### Dialogs, drawers, and menus
+
+- Backdrop fades independently
+- Surface enters with scale plus opacity, or slides from its physical edge
+- Exit animations are shorter than entry animations
+- Focus management must not wait for animation completion
+
+#### Toasts and notifications
+
+- Enter from the nearest viewport edge
+- Stack changes animate smoothly
+- Auto-dismiss progress must not be the only time indicator
+- Mark-read transitions reduce emphasis without removing context abruptly
+
+#### Messaging
+
+- New message enters with subtle opacity and vertical offset
+- Sending state shows locally without pretending delivery confirmation
+- Status and system messages use a restrained timeline transition
+- Do not animate the full conversation on every refetch
+
+#### Dashboards
+
+- Metric values may animate from their previous displayed value
+- Skeletons crossfade into content
+- Charts are outside MVP unless real and useful
+- Table sorting should animate row reordering only when it remains legible
+
+### Scroll-based reveals
+
+Use viewport reveals selectively:
+
+- Animate each major marketing section once
+- Prefer opacity plus 12–24 px vertical movement
+- Stagger child cards by 40–80 ms
+- Trigger before the content reaches the center of the viewport
+- Never hide essential content solely until JavaScript executes
+
+Avoid scroll hijacking, pinned storytelling, and long parallax sequences.
+
+### Route and page transitions
+
+Use restrained route continuity:
+
+- Crossfade main content or animate a small page-header region
+- Preserve scroll and focus behavior correctly
+- Avoid animating the entire application shell on every route
+- Use loading skeletons for data latency rather than long exit transitions
+
+### Ambient animation limits
+
+Continuous animation is permitted only for subtle decorative layers.
+
+Rules:
+
+- Maximum two continuously animated ambient elements per viewport
+- Minimum cycle duration approximately 8 seconds
+- Low opacity and low travel distance
+- Pause or simplify when offscreen
+- Avoid continuous animation in admin operational pages
+- Avoid high-frequency blur, large filters, or expensive box-shadow animation
+
+### Performance requirements
+
+- Animate `transform` and `opacity` whenever possible
+- Avoid layout-thrashing properties such as width, height, top, and left for frequent animation
+- Avoid animating large blurred surfaces on low-power mobile devices
+- Lazy-load motion-heavy visual modules
+- Keep animation code out of server components unless a client boundary is needed
+- Do not convert entire pages into client components solely for animation
+- Target smooth interaction on mid-range mobile devices
+- Use `will-change` sparingly and remove it after animation where practical
 
 ### Reduced motion
 
-Respect `prefers-reduced-motion` and disable nonessential transforms.
+Respect `prefers-reduced-motion` and Motion's reduced-motion hooks.
 
----
+When reduced motion is enabled:
+
+- Remove parallax, tilt, continuous ambient movement, and large translations
+- Replace shared-layout motion with immediate state changes or short opacity fades
+- Keep focus, success, loading, and state feedback visible
+- Do not remove information or interaction affordances
+
+### Prohibited motion patterns
+
+Avoid:
+
+- Scroll hijacking
+- Autoplay video backgrounds
+- Cursor replacement
+- Excessive 3D card tilt
+- Repeated bouncing
+- Large page entrance animations on every navigation
+- Animation that blocks input
+- Decorative status pulsing
+- Constant motion in tables or admin queues
+- Animating every element simultaneously
+- Fake progress or fake real-time activity
 
 ## 19. Responsive Rules
 

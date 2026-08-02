@@ -5,22 +5,24 @@ import { EnvService } from "../../common/env/env.service";
 
 @Injectable()
 export class AdminTotpService {
-  private readonly totp: ReturnType<typeof authenticator.create>;
+  constructor(private readonly envService: EnvService) {}
 
-  constructor(private readonly envService: EnvService) {
-    this.totp = authenticator.create({
+  private createTotp(): ReturnType<typeof authenticator.create> {
+    return authenticator.create({
       ...authenticator.allOptions(),
+      // otplib's default epoch is captured when the instance is created; TOTP must follow wall-clock time.
+      epoch: Date.now(),
       step: 30,
-      window: envService.values.ADMIN_TOTP_WINDOW,
+      window: this.envService.values.ADMIN_TOTP_WINDOW,
     });
   }
 
   generateSecret(): string {
-    return this.totp.generateSecret(20);
+    return this.createTotp().generateSecret(20);
   }
 
   enrollmentUri(email: string, secret: string): string {
-    return this.totp.keyuri(
+    return this.createTotp().keyuri(
       email,
       this.envService.values.ADMIN_TOTP_ISSUER,
       secret,
@@ -28,10 +30,15 @@ export class AdminTotpService {
   }
 
   verify(code: string, secret: string): boolean {
-    return /^\d{6}$/.test(code) && this.totp.check(code, secret);
+    const normalizedCode = code.replace(/\s/g, "");
+    const normalizedSecret = secret.replace(/\s/g, "").toUpperCase();
+    return (
+      /^\d{6}$/.test(normalizedCode) &&
+      this.createTotp().check(normalizedCode, normalizedSecret)
+    );
   }
 
   currentCode(secret: string): string {
-    return this.totp.generate(secret);
+    return this.createTotp().generate(secret);
   }
 }

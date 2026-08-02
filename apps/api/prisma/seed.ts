@@ -302,6 +302,13 @@ async function seedDevelopmentAdmin() {
       role: AdminRole.SUPER_ADMIN,
       status: AccountStatus.ACTIVE,
       twoFactorEnabled,
+      ...(twoFactorEnabled
+        ? {}
+        : {
+            twoFactorSecretEncrypted: null,
+            twoFactorSecretKeyVersion: null,
+            twoFactorConfirmedAt: null,
+          }),
     },
   });
 

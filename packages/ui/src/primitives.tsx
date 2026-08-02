@@ -30,7 +30,7 @@ const buttonSizes: Record<ButtonSize, string> = {
   icon: "setu-button-icon",
 };
 
-function cx(...values: Array<string | false | null | undefined>) {
+export function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
 }
 

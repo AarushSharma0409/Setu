@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from "@nestjs/common";
 import {
@@ -27,6 +28,8 @@ const GENERIC_AUTH_ERROR = "Invalid credentials";
 
 @Injectable()
 export class AdminAuthService {
+  private readonly logger = new Logger(AdminAuthService.name);
+
   constructor(
     private readonly passwordService: PasswordService,
     private readonly prisma: PrismaService,
@@ -138,6 +141,7 @@ export class AdminAuthService {
     const admin = await this.requireActiveAdmin(challenge.adminUserId);
 
     if (!challenge.pendingSecretEncrypted) {
+      this.logChallengeFailure("enrollment_secret_missing");
       throw new UnauthorizedException("Enrollment is not ready");
     }
 
@@ -145,6 +149,7 @@ export class AdminAuthService {
       challenge.pendingSecretEncrypted,
     );
     if (!this.totpService.verify(code, secret)) {
+      this.logChallengeFailure("totp_invalid");
       await this.recordSecondFactorFailure(admin.id);
       await this.auditService.record({
         adminUserId: admin.id,
@@ -156,6 +161,12 @@ export class AdminAuthService {
     }
 
     const recoveryCodes = createRecoveryCodes();
+    const recoveryCodeRecords = await Promise.all(
+      recoveryCodes.map(async (recoveryCode) => ({
+        adminUserId: admin.id,
+        codeHash: await bcrypt.hash(recoveryCode, 12),
+      })),
+    );
     await this.prisma.$transaction(async (tx) => {
       const consumed = await tx.adminAuthChallenge.updateMany({
         where: {
@@ -186,14 +197,7 @@ export class AdminAuthService {
       await tx.adminRecoveryCode.deleteMany({
         where: { adminUserId: admin.id },
       });
-      await tx.adminRecoveryCode.createMany({
-        data: await Promise.all(
-          recoveryCodes.map(async (code) => ({
-            adminUserId: admin.id,
-            codeHash: await bcrypt.hash(code, 12),
-          })),
-        ),
-      });
+      await tx.adminRecoveryCode.createMany({ data: recoveryCodeRecords });
       await tx.auditLog.create({
         data: {
           adminUserId: admin.id,
@@ -429,10 +433,12 @@ export class AdminAuthService {
     try {
       payload = await this.tokenService.verifyAdminChallenge(token);
     } catch {
+      this.logChallengeFailure("token_invalid");
       throw new UnauthorizedException("Authentication challenge expired");
     }
 
     if (payload.challengeType !== type) {
+      this.logChallengeFailure("type_mismatch");
       throw new UnauthorizedException("Authentication challenge expired");
     }
 
@@ -448,10 +454,17 @@ export class AdminAuthService {
     });
 
     if (!challenge) {
+      this.logChallengeFailure("database_miss_or_expired");
       throw new UnauthorizedException("Authentication challenge expired");
     }
 
     return challenge;
+  }
+
+  private logChallengeFailure(reason: string): void {
+    if (!this.envService.isProduction) {
+      this.logger.warn(`Admin auth challenge rejected: ${reason}`);
+    }
   }
 
   private async consumeChallenge(
