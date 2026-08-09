@@ -86,7 +86,7 @@ box-shadow:
 
 ```css
 box-shadow:
-  inset 4px 4px 8px rgba(163, 177, 198, 0.20),
+  inset 4px 4px 8px rgba(163, 177, 198, 0.2),
   inset -4px -4px 8px rgba(255, 255, 255, 0.72);
 ```
 
@@ -96,7 +96,7 @@ box-shadow:
 box-shadow:
   0 8px 22px rgba(95, 124, 255, 0.26),
   6px 6px 14px rgba(163, 177, 198, 0.22),
-  -5px -5px 12px rgba(255, 255, 255, 0.70);
+  -5px -5px 12px rgba(255, 255, 255, 0.7);
 ```
 
 Use shadows sparingly. Dense admin tables should use flatter surfaces.
@@ -438,12 +438,7 @@ Do not duplicate existing shared UI unnecessarily. Prefer extending existing Set
 Recommended API:
 
 ```ts
-type NeoElevation =
-  | "flat"
-  | "raised-sm"
-  | "raised"
-  | "raised-lg"
-  | "inset";
+type NeoElevation = "flat" | "raised-sm" | "raised" | "raised-lg" | "inset";
 ```
 
 Centralize mapping.

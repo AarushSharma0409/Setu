@@ -1,45 +1,99 @@
-import {
-  Card,
-  PageContainer,
-  PageHeader,
-  SectionHeader,
-  StatusBadge,
-} from "@setu/ui";
+import { Card, PageContainer, PageHeader, StatusBadge } from "@setu/ui";
+import Link from "next/link";
 
 import { ProtectedShell } from "../../components/protected-shell";
+
+const overviewMetrics = [
+  {
+    label: "Verification queue",
+    value: "Ready",
+    detail: "Review incoming vendor applications.",
+    href: "/dashboard/vendors",
+    status: "PENDING_REVIEW",
+  },
+  {
+    label: "Platform health",
+    value: "Monitored",
+    detail: "PostgreSQL, Redis, and API readiness.",
+    href: "/dashboard/system-status",
+    status: "ACTIVE",
+  },
+  {
+    label: "Audit boundary",
+    value: "Protected",
+    detail: "Append-only operational history.",
+    href: "/dashboard/audit",
+    status: "ACTIVE",
+  },
+] as const;
 
 export default function DashboardPage() {
   return (
     <PageContainer>
       <ProtectedShell>
         <PageHeader
+          actions={
+            <Link className="setu-button setu-button-primary setu-button-sm" href="/dashboard/vendors">
+              Open verification queue
+            </Link>
+          }
           eyebrow="Setu operations"
-          title="Operations dashboard"
-          description="A focused workspace for vendor verification, system health, and audit review."
+          title="A clear view of operations."
+          description="Review service-provider applications, confirm platform readiness, and keep every administrative decision traceable."
         />
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <p className="text-sm text-slate-500">Verification</p>
-            <p className="mt-2 text-2xl font-bold">Queue</p>
-            <StatusBadge status="PENDING_REVIEW" />
+
+        <section className="setu-admin-dashboard-metrics" aria-label="Operations overview">
+          {overviewMetrics.map((metric, index) => (
+            <Link href={metric.href} key={metric.label}>
+              <Card className="setu-admin-dashboard-metric h-full">
+                <div className="setu-admin-dashboard-metric-top">
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <StatusBadge status={metric.status} />
+                </div>
+                <p>{metric.label}</p>
+                <strong>{metric.value}</strong>
+                <small>{metric.detail}</small>
+                <em>Open workspace ↗</em>
+              </Card>
+            </Link>
+          ))}
+        </section>
+
+        <section className="setu-admin-dashboard-panels">
+          <Card className="setu-admin-dashboard-focus">
+            <p className="setu-admin-dashboard-kicker">Start here</p>
+            <h2>Move through the operational rhythm.</h2>
+            <p>
+              Each workspace is designed around a clear next step, with status
+              changes and sensitive actions retained in the audit trail.
+            </p>
+            <div className="setu-admin-dashboard-steps">
+              {[
+                ["01", "Review", "Inspect submitted vendor applications."],
+                ["02", "Decide", "Record an approval, rejection, or hold."],
+                ["03", "Verify", "Confirm the outcome in the audit history."],
+              ].map(([index, title, detail]) => (
+                <div key={index}>
+                  <span>{index}</span>
+                  <strong>{title}</strong>
+                  <small>{detail}</small>
+                </div>
+              ))}
+            </div>
           </Card>
-          <Card>
-            <p className="text-sm text-slate-500">Access</p>
-            <p className="mt-2 text-2xl font-bold">Protected</p>
-            <StatusBadge status="ACTIVE" />
+          <Card className="setu-admin-dashboard-guardrails">
+            <p className="setu-admin-dashboard-kicker">Workspace guardrails</p>
+            <h2>Designed for deliberate decisions.</h2>
+            <ul>
+              <li>Authentication is separate from public-user access.</li>
+              <li>Administrative actions are retained in append-only history.</li>
+              <li>Insurance administration stays private and configuration-led.</li>
+            </ul>
+            <Link href="/insurance" className="setu-admin-dashboard-text-link">
+              Review insurance administration <span aria-hidden="true">→</span>
+            </Link>
           </Card>
-          <Card>
-            <p className="text-sm text-slate-500">Audit trail</p>
-            <p className="mt-2 text-2xl font-bold">Append-only</p>
-            <StatusBadge status="ACTIVE" />
-          </Card>
-        </div>
-        <Card>
-          <SectionHeader
-            title="Start with a review queue"
-            description="Use the navigation to inspect vendor applications and make status decisions with an audit trail."
-          />
-        </Card>
+        </section>
       </ProtectedShell>
     </PageContainer>
   );

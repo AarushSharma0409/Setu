@@ -145,19 +145,27 @@ export function InsuranceEntry() {
             </div>
           </Reveal>
         </section>
-        <section id="policy-types" className="setu-insurance-policy-types">
+        <section
+          id="policy-types"
+          className="setu-insurance-policy-types setu-insurance-choice-section"
+          aria-labelledby="insurance-choice-title"
+        >
           <Reveal>
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold text-violet-700">
-                Start with the right context
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-                Choose an insurance type
-              </h2>
-              <p className="mt-2 text-slate-600">
-                Only policy types currently enabled for Setu&apos;s insurance
-                journey appear here.
-              </p>
+            <div className="setu-insurance-choice-head">
+              <div>
+                <p className="setu-insurance-choice-kicker">Explore coverage</p>
+                <h2 id="insurance-choice-title">Choose an insurance type.</h2>
+                <p>
+                  Begin with the kind of cover you want to understand. You can
+                  review the journey before sharing any personal details.
+                </p>
+              </div>
+              <div className="setu-insurance-choice-signal">
+                <span className="setu-insurance-choice-signal-dot" />
+                {policyTypes.data?.items.length
+                  ? `${policyTypes.data.items.length} paths available`
+                  : "Guided starting points"}
+              </div>
             </div>
           </Reveal>
           {policyTypes.isLoading ? (
@@ -168,25 +176,33 @@ export function InsuranceEntry() {
               detail="This service has not been enabled yet."
             />
           ) : policyTypes.data?.items.length ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="setu-insurance-choice-grid">
               {policyTypes.data.items.map((type, index) => (
                 <Reveal delay={index * 60} key={type.id}>
-                  <Card className="setu-card-interactive flex h-full flex-col items-start space-y-4">
-                    <span
-                      className="grid h-11 w-11 place-items-center rounded-2xl bg-violet-50 text-lg font-semibold text-violet-700"
-                      aria-hidden="true"
-                    >
-                      {type.name.slice(0, 1)}
-                    </span>
+                  <Card className="setu-insurance-choice-card h-full">
+                    <div className="setu-insurance-choice-card-top">
+                      <span className="setu-insurance-choice-icon" aria-hidden="true">
+                        {type.name.slice(0, 1)}
+                      </span>
+                      <span className="setu-insurance-choice-index">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                    </div>
                     <div>
-                      <h3 className="text-xl font-semibold">{type.name}</h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                      <p className="setu-insurance-choice-status">
+                        Available to explore
+                      </p>
+                      <h3>{type.name}</h3>
+                      <p className="setu-insurance-choice-description">
                         {type.description ??
                           "Begin a private assessment to understand available cover options."}
                       </p>
                     </div>
+                    <p className="setu-insurance-choice-note">
+                      A private needs check-in comes before any quote request.
+                    </p>
                     <Button
-                      className="mt-auto"
+                      className="setu-insurance-choice-action"
                       onClick={() => void start(type.id)}
                     >
                       {authenticated ? "Start assessment" : "Sign in to start"}

@@ -1,10 +1,17 @@
 "use client";
 
-import { Card, ErrorState, LoadingState, PageHeader } from "@setu/ui";
+import {
+  Card,
+  ErrorState,
+  LoadingState,
+  PageContainer,
+  PageHeader,
+} from "@setu/ui";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 
+import { ProtectedShell } from "../../../components/protected-shell";
 import { adminApi } from "../../../lib/admin-api-client";
 
 const windows = [1, 24, 168, 720] as const;
@@ -26,29 +33,46 @@ export default function InsuranceOperationsPage() {
   });
   if (!token)
     return (
-      <ErrorState
-        title="Sign in required"
-        detail="Your MFA-backed admin session is required."
-      />
+      <PageContainer>
+        <ProtectedShell>
+          <ErrorState
+            title="Sign in required"
+            detail="Your MFA-backed admin session is required."
+          />
+        </ProtectedShell>
+      </PageContainer>
     );
   if (summary.isLoading)
-    return <LoadingState label="Loading insurance operations" />;
+    return (
+      <PageContainer>
+        <ProtectedShell>
+          <LoadingState label="Loading insurance operations" />
+        </ProtectedShell>
+      </PageContainer>
+    );
   if (summary.error)
     return (
-      <ErrorState
-        title="Operations unavailable"
-        detail="Enable operations and check your permission."
-      />
+      <PageContainer>
+        <ProtectedShell>
+          <ErrorState
+            title="Operations unavailable"
+            detail="Enable operations and check your permission."
+          />
+        </ProtectedShell>
+      </PageContainer>
     );
   const data = summary.data;
   return (
-    <section className="space-y-6">
-      <PageHeader
-        eyebrow="Insurance operations"
-        title="Operations dashboard"
-        description="Real-time bounded metrics, configuration warnings, and controlled remediation."
-      />
-      <div className="flex flex-wrap gap-2">
+    <PageContainer>
+      <ProtectedShell>
+        <section className="space-y-6">
+          <PageHeader
+            eyebrow="Insurance operations"
+            title="Operations dashboard"
+            description="Real-time bounded metrics, configuration warnings, and controlled remediation."
+          />
+          <div className="setu-insurance-operations-window" aria-label="Reporting window">
+            <span>Reporting window</span>
         {windows.map((value) => (
           <button
             className={
@@ -66,8 +90,8 @@ export default function InsuranceOperationsPage() {
               : `${value / 24 >= 1 ? value / 24 + " days" : value + " hours"}`}
           </button>
         ))}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          </div>
+          <div className="setu-insurance-operations-metrics">
         {[
           ["Quote requests", data?.quoteRequests],
           ["Failed quotes", data?.failedQuotes],
@@ -77,15 +101,19 @@ export default function InsuranceOperationsPage() {
           ["Callbacks failed", data?.callbacksFailed],
           ["Providers degraded", data?.degradedProviders],
           ["Providers unavailable", data?.unavailableProviders],
-        ].map(([label, value]) => (
-          <Card key={String(label)}>
-            <p className="text-sm text-slate-600">{label}</p>
-            <p className="mt-1 text-2xl font-semibold">{String(value ?? 0)}</p>
+        ].map(([label, value], index) => (
+          <Card className="setu-insurance-operations-metric" key={String(label)}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <p>{label}</p>
+            <strong>{String(value ?? 0)}</strong>
           </Card>
         ))}
-      </div>
-      <Card>
-        <h2 className="font-semibold">Configuration warnings</h2>
+          </div>
+          <Card className="setu-insurance-operations-warnings">
+        <div>
+          <p className="setu-admin-dashboard-kicker">Attention required</p>
+          <h2>Configuration warnings</h2>
+        </div>
         {data?.warnings.length ? (
           <ul className="mt-3 space-y-2 text-sm">
             {data.warnings.map((warning) => (
@@ -100,25 +128,30 @@ export default function InsuranceOperationsPage() {
             No current configuration warnings.
           </p>
         )}
-      </Card>
-      <nav className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          </Card>
+          <nav className="setu-insurance-operations-links">
         {[
-          ["/insurance/operations/quotes", "Quote operations"],
-          ["/insurance/operations/providers", "Provider operations"],
-          ["/insurance/operations/callbacks", "Callback operations"],
-          ["/insurance/operations/handoffs", "Handoff operations"],
-          ["/insurance/integrations", "Provider integrations"],
-          ["/insurance/support", "Customer support"],
-        ].map(([href, label]) => (
+          ["/insurance/operations/quotes", "Quote operations", "Inspect quote lifecycle events."],
+          ["/insurance/operations/providers", "Provider operations", "Review health and provider context."],
+          ["/insurance/operations/callbacks", "Callback operations", "Track safe callback processing state."],
+          ["/insurance/operations/handoffs", "Handoff operations", "Review external continuation history."],
+          ["/insurance/integrations", "Provider integrations", "Check controlled connection health."],
+          ["/insurance/support", "Customer support", "Search exact protected references."],
+        ].map(([href, label, detail], index) => (
           <Link
-            className="rounded-lg border bg-white p-4 font-medium hover:border-violet-300"
+            className="setu-insurance-operations-link"
             href={href}
             key={href}
           >
-            {label}
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{label}</strong>
+            <small>{detail}</small>
+            <em>Open ↗</em>
           </Link>
         ))}
-      </nav>
-    </section>
+          </nav>
+        </section>
+      </ProtectedShell>
+    </PageContainer>
   );
 }

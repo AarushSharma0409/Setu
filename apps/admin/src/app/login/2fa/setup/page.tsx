@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  ErrorState,
-  Input,
-  LoadingState,
-  PageContainer,
-} from "@setu/ui";
+import { Button, ErrorState, Input, LoadingState } from "@setu/ui";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState, type FormEvent } from "react";
 
+import { AdminAuthShell } from "../../../../components/admin-auth-shell";
 import { adminApi } from "../../../../lib/admin-api-client";
 
 export default function AdminTwoFactorSetupPage() {
@@ -67,87 +61,85 @@ export default function AdminTwoFactorSetupPage() {
 
   if (recoveryCodes) {
     return (
-      <PageContainer className="grid min-h-screen place-items-center py-10">
-        <Card className="w-full max-w-lg">
-          <h1 className="text-2xl font-semibold">Save your recovery codes</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            These codes are shown once. Store them in a password manager before
-            continuing.
-          </p>
-          <pre className="mt-6 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-white">
-            {recoveryCodes.join("\n")}
-          </pre>
-          <Button
-            className="mt-6"
-            type="button"
-            onClick={() => router.replace("/dashboard")}
-          >
-            Continue to dashboard
-          </Button>
-        </Card>
-      </PageContainer>
+      <AdminAuthShell
+        description="Store these codes before continuing to the dashboard."
+        eyebrow="Security setup"
+        step="Complete"
+        title="Save your recovery codes"
+      >
+        <p className="setu-admin-auth-note">
+          These codes are shown once. Store them in a password manager before
+          continuing.
+        </p>
+        <pre className="setu-admin-recovery-codes">
+          {recoveryCodes.join("\n")}
+        </pre>
+        <Button
+          className="mt-6 w-full"
+          type="button"
+          onClick={() => router.replace("/dashboard")}
+        >
+          Continue to dashboard
+        </Button>
+      </AdminAuthShell>
     );
   }
 
   return (
-    <PageContainer className="grid min-h-screen place-items-center py-10">
-      <Card className="w-full max-w-lg">
-        <h1 className="text-2xl font-semibold">
-          Set up two-factor authentication
-        </h1>
-        {setup ? (
-          <>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Add this account to your authenticator app, then enter the code it
-              displays.
-            </p>
-            <label
-              className="mt-5 block text-sm font-medium text-slate-700"
-              htmlFor="otpauth-uri"
-            >
-              Setup URI
+    <AdminAuthShell
+      description="Add this account to your authenticator app to protect the operations workspace."
+      eyebrow="Security setup"
+      step="Step 2 of 2"
+      title="Set up two-factor authentication"
+    >
+      {setup ? (
+        <>
+          <p className="setu-admin-auth-note">
+            Add this account to your authenticator app, then enter the code it
+            displays.
+          </p>
+          <label className="setu-admin-auth-uri-label" htmlFor="otpauth-uri">
+            Setup URI
+          </label>
+          <textarea
+            id="otpauth-uri"
+            className="setu-admin-auth-uri"
+            readOnly
+            value={setup.otpauthUri}
+          />
+          <p className="setu-admin-auth-key">
+            Manual setup key: {setup.secret}
+          </p>
+          <form
+            className="setu-admin-auth-form"
+            onSubmit={(event) => void submit(event)}
+          >
+            <label className="setu-label" htmlFor="setup-code">
+              Authenticator code
+              <span aria-hidden="true" className="setu-required" />
             </label>
-            <textarea
-              id="otpauth-uri"
-              className="mt-2 min-h-24 w-full rounded-lg border border-slate-300 p-3 text-xs"
-              readOnly
-              value={setup.otpauthUri}
+            <Input
+              id="setup-code"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="123456"
+              required
             />
-            <p className="mt-3 text-xs text-slate-500">
-              Manual setup key: {setup.secret}
-            </p>
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={(event) => void submit(event)}
-            >
-              <label
-                className="block text-sm font-medium text-slate-700"
-                htmlFor="setup-code"
-              >
-                Authenticator code
-              </label>
-              <Input
-                id="setup-code"
-                value={code}
-                onChange={(event) => setCode(event.target.value)}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="123456"
-              />
-              <Button disabled={loading} type="submit">
-                {loading ? "Enabling" : "Enable two-factor authentication"}
-              </Button>
-            </form>
-          </>
-        ) : !error ? (
-          <LoadingState label="Preparing two-factor setup" />
-        ) : null}
-        {error ? (
-          <div className="mt-4">
-            <ErrorState title="Setup unavailable" detail={error} />
-          </div>
-        ) : null}
-      </Card>
-    </PageContainer>
+            <Button className="w-full" disabled={loading} type="submit">
+              {loading ? "Enabling" : "Enable two-factor authentication"}
+            </Button>
+          </form>
+        </>
+      ) : !error ? (
+        <LoadingState label="Preparing two-factor setup" />
+      ) : null}
+      {error ? (
+        <div className="mt-4">
+          <ErrorState title="Setup unavailable" detail={error} />
+        </div>
+      ) : null}
+    </AdminAuthShell>
   );
 }

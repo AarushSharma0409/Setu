@@ -4,6 +4,7 @@ import { Button, Card, ErrorState, LoadingState, PageHeader } from "@setu/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { AdminPageFrame } from "../../../components/admin-page-frame";
 import { adminApi } from "../../../lib/admin-api-client";
 
 export default function InsuranceIntegrationsPage() {
@@ -32,38 +33,48 @@ export default function InsuranceIntegrationsPage() {
   }
   if (!token)
     return (
-      <ErrorState
-        title="Sign in required"
-        detail="Your admin session is required."
-      />
+      <AdminPageFrame>
+        <ErrorState
+          title="Sign in required"
+          detail="Your admin session is required."
+        />
+      </AdminPageFrame>
     );
   if (dashboard.isLoading || integrations.isLoading)
-    return <LoadingState label="Loading integration operations" />;
+    return (
+      <AdminPageFrame>
+        <LoadingState label="Loading integration operations" />
+      </AdminPageFrame>
+    );
   if (dashboard.error || integrations.error)
     return (
-      <ErrorState
-        title="Integration operations unavailable"
-        detail="Enable the insurance integration controls and confirm your permission."
-      />
+      <AdminPageFrame>
+        <ErrorState
+          title="Integration operations unavailable"
+          detail="Enable the insurance integration controls and confirm your permission."
+        />
+      </AdminPageFrame>
     );
   const metrics = dashboard.data;
   return (
-    <section className="space-y-6">
+    <AdminPageFrame>
+      <section className="space-y-6">
       <PageHeader
         eyebrow="Insurance operations"
         title="Provider integrations"
         description="Configuration and health only. Credentials are managed by secure references and never displayed here."
       />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="setu-insurance-operations-metrics">
         {[
           ["Active", metrics?.active],
           ["Sandbox", metrics?.sandbox],
           ["Healthy", metrics?.healthy],
           ["Handoffs (24h)", metrics?.handoffsCreatedLast24Hours],
-        ].map(([label, value]) => (
-          <Card key={String(label)}>
-            <p className="text-sm text-slate-600">{label}</p>
-            <p className="mt-1 text-2xl font-semibold">{String(value ?? 0)}</p>
+        ].map(([label, value], index) => (
+          <Card className="setu-insurance-operations-metric" key={String(label)}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <p>{label}</p>
+            <strong>{String(value ?? 0)}</strong>
           </Card>
         ))}
       </div>
@@ -125,6 +136,7 @@ export default function InsuranceIntegrationsPage() {
           ) : null}
         </div>
       </Card>
-    </section>
+      </section>
+    </AdminPageFrame>
   );
 }

@@ -8,7 +8,7 @@ import {
   PageContainer,
 } from "@setu/ui";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { publicApi } from "../lib/api-client";
 
@@ -28,7 +28,7 @@ export function NotificationsPanel({ mode }: { mode: "user" | "vendor" }) {
   const [unread, setUnread] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const load = () => {
+  const load = useCallback(() => {
     const token = sessionStorage.getItem(tokenKey);
     if (!token) {
       window.location.href = `/dev-auth?returnTo=${encodeURIComponent(mode === "vendor" ? "/vendor/notifications" : "/account/notifications")}`;
@@ -48,10 +48,10 @@ export function NotificationsPanel({ mode }: { mode: "user" | "vendor" }) {
         ),
       )
       .finally(() => setLoading(false));
-  };
+  }, [mode]);
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
   async function mark(id: string) {
     const token = sessionStorage.getItem(tokenKey);
     if (!token) return;

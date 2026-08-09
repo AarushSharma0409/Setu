@@ -80,15 +80,8 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 Insurance
               </Link>
               <Link
-                className="setu-nav-link"
-                href="/#how-it-works"
-                onClick={() => setOpen(false)}
-              >
-                How it works
-              </Link>
-              <Link
-                className="setu-nav-link"
-                href="/#about"
+                className={linkClass("/about")}
+                href="/about"
                 onClick={() => setOpen(false)}
               >
                 About Setu
@@ -158,7 +151,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   </Link>
                   <Link
                     className="setu-button setu-button-primary setu-button-sm"
-                    href="/dev-auth"
+                    href="/dev-auth?intent=signup"
                     onClick={() => setOpen(false)}
                   >
                     Get started
@@ -182,14 +175,24 @@ export function PublicShell({ children }: { children: ReactNode }) {
             <p className="mt-2 max-w-sm text-sm text-slate-500">
               A clearer way to discover approved service providers across India.
             </p>
+            <p className="setu-footer-powered">
+              <span aria-hidden="true">✦</span> Powered by Dodun Soft Solutions
+            </p>
           </div>
           <nav aria-label="Footer navigation" className="setu-footer-links">
             <Link href="/categories">Categories</Link>
             <Link href="/cities">Cities</Link>
             <Link href="/search">Find a vendor</Link>
+            <Link href="/about">About Setu</Link>
             <Link href="/insurance">Explore insurance</Link>
             <Link href="/vendor/onboarding">Become a vendor</Link>
           </nav>
+          <address className="setu-footer-contact">
+            <p>Contact Setu</p>
+            <a href="mailto:support@setu.example">support@setu.example</a>
+            <a href="tel:+919000000000">+91 90000 00000</a>
+            <small>Demo details — replace before launch.</small>
+          </address>
         </div>
         <div className="setu-footer-bottom">
           <span>© {new Date().getFullYear()} Setu</span>

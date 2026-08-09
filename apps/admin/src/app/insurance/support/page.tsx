@@ -10,6 +10,7 @@ import {
 } from "@setu/ui";
 import { useState } from "react";
 
+import { AdminPageFrame } from "../../../components/admin-page-frame";
 import { adminApi } from "../../../lib/admin-api-client";
 
 export default function InsuranceSupportPage() {
@@ -39,13 +40,16 @@ export default function InsuranceSupportPage() {
   }
   if (!token)
     return (
-      <ErrorState
-        title="Sign in required"
-        detail="Your MFA-backed admin session is required."
-      />
+      <AdminPageFrame>
+        <ErrorState
+          title="Sign in required"
+          detail="Your MFA-backed admin session is required."
+        />
+      </AdminPageFrame>
     );
   return (
-    <section className="space-y-6">
+    <AdminPageFrame>
+      <section className="space-y-6">
       <PageHeader
         eyebrow="Insurance support"
         title="Customer lookup"
@@ -83,6 +87,7 @@ export default function InsuranceSupportPage() {
           </pre>
         </Card>
       ) : null}
-    </section>
+      </section>
+    </AdminPageFrame>
   );
 }

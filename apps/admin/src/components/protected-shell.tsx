@@ -7,6 +7,22 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { adminApi, type AdminIdentity } from "../lib/admin-api-client";
 
+const primaryNavigation = [
+  ["/dashboard", "Overview", "01"],
+  ["/dashboard/system-status", "System status", "02"],
+  ["/dashboard/vendors", "Verification queue", "03"],
+  ["/dashboard/audit", "Audit log", "04"],
+] as const;
+
+const insuranceNavigation = [
+  ["/insurance", "Insurance overview", "01"],
+  ["/insurance/products", "Product catalogue", "02"],
+  ["/insurance/ranking", "Ranking methods", "03"],
+  ["/insurance/integrations", "Provider integrations", "04"],
+  ["/insurance/operations", "Insurance operations", "05"],
+  ["/insurance/support", "Insurance support", "06"],
+] as const;
+
 export function ProtectedShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -38,19 +54,27 @@ export function ProtectedShell({ children }: { children: ReactNode }) {
     return <LoadingState label="Checking your operations session" />;
   }
 
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
   return (
-    <div className="space-y-6">
+    <div className="setu-admin-application">
       <header className="setu-admin-header -mx-4 -mt-8 sm:-mx-6 lg:-mx-8">
         <Link className="setu-admin-brand" href="/dashboard">
-          <span className="setu-brand-mark" aria-hidden="true">
+          <span className="setu-admin-brand-mark" aria-hidden="true">
             S
           </span>
-          Setu Operations
-        </Link>
-        <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-slate-500 sm:inline">
-            {admin?.email}
+          <span>
+            <strong>Setu</strong>
+            <small>Operations console</small>
           </span>
+        </Link>
+        <div className="setu-admin-session">
+          <span className="setu-admin-session-signal" aria-hidden="true" />
+          <div className="hidden sm:block">
+            <strong>{admin?.email}</strong>
+            <span>{admin?.role.replaceAll("_", " ") ?? "Admin session"}</span>
+          </div>
           <Button
             type="button"
             size="sm"
@@ -63,28 +87,42 @@ export function ProtectedShell({ children }: { children: ReactNode }) {
       </header>
       <div className="setu-admin-layout">
         <nav aria-label="Operations navigation" className="setu-admin-sidebar">
-          {[
-            ["/dashboard", "Overview"],
-            ["/dashboard/system-status", "System status"],
-            ["/dashboard/vendors", "Verification queue"],
-            ["/dashboard/audit", "Audit log"],
-            ["/insurance", "Insurance"],
-            ["/insurance/products", "Product catalogue"],
-            ["/insurance/ranking", "Ranking methods"],
-            ["/insurance/integrations", "Provider integrations"],
-            ["/insurance/operations", "Insurance operations"],
-            ["/insurance/support", "Insurance support"],
-          ].map(([href, label]) => (
-            <Link
-              className={`setu-admin-nav-link ${pathname === href || pathname.startsWith(`${href}/`) ? "setu-admin-nav-link-active" : ""}`}
-              href={href}
-              key={href}
-            >
-              {label}
-            </Link>
-          ))}
+          <div className="setu-admin-sidebar-intro">
+            <span>Internal workspace</span>
+            <strong>Control center</strong>
+          </div>
+          <div className="setu-admin-nav-group">
+            <p>Core operations</p>
+            {primaryNavigation.map(([href, label, index]) => (
+              <Link
+                className={`setu-admin-nav-link ${isActive(href) ? "setu-admin-nav-link-active" : ""}`}
+                href={href}
+                key={href}
+              >
+                <span aria-hidden="true">{index}</span>
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="setu-admin-nav-group">
+            <p>Insurance administration</p>
+            {insuranceNavigation.map(([href, label, index]) => (
+              <Link
+                className={`setu-admin-nav-link ${isActive(href) ? "setu-admin-nav-link-active" : ""}`}
+                href={href}
+                key={href}
+              >
+                <span aria-hidden="true">{index}</span>
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="setu-admin-sidebar-footer">
+            <span className="setu-admin-session-signal" aria-hidden="true" />
+            MFA-protected session
+          </div>
         </nav>
-        <div className="setu-admin-main space-y-6">{children}</div>
+        <div className="setu-admin-main">{children}</div>
       </div>
     </div>
   );

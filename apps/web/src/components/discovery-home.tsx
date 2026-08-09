@@ -22,6 +22,99 @@ import React, { useEffect, useState, type FormEvent } from "react";
 
 import { publicApi } from "../lib/api-client";
 
+function CategoryGlyph({ slug }: { slug: string }) {
+  const shared = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    strokeWidth: 1.8,
+  };
+
+  if (slug.includes("home") || slug.includes("repair")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path {...shared} d="m3.5 10 8.5-6.5 8.5 6.5v10H14v-5.25h-4V20H3.5Z" />
+      </svg>
+    );
+  }
+  if (slug.includes("event") || slug.includes("wedding")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path {...shared} d="M5 20V8.25A2.25 2.25 0 0 1 7.25 6h9.5A2.25 2.25 0 0 1 19 8.25V20M3 20h18M8 3.5v5M16 3.5v5M9 13h6" />
+      </svg>
+    );
+  }
+  if (slug.includes("health") || slug.includes("wellness")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path {...shared} d="M12 20s-7-3.9-7-9.35C5 7.95 6.77 6 9.25 6A4.1 4.1 0 0 1 12 7.12 4.1 4.1 0 0 1 14.75 6C17.23 6 19 7.95 19 10.65 19 16.1 12 20 12 20Z" />
+        <path {...shared} d="M8.25 12h2l1.1-2.1 1.45 4.15 1.05-2.05h1.9" />
+      </svg>
+    );
+  }
+  if (slug.includes("auto")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path {...shared} d="m5.25 16 .95-5.2A2.2 2.2 0 0 1 8.37 9h7.26a2.2 2.2 0 0 1 2.17 1.8l.95 5.2v2.5h-2.5v-1.25h-8.5v1.25h-2.5Z" />
+        <path {...shared} d="M6.5 14h11M8.25 15.5h.01M15.75 15.5h.01" />
+      </svg>
+    );
+  }
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path {...shared} d="M12 3.5 19 7v10l-7 3.5L5 17V7Z" />
+      <path {...shared} d="m5.25 7.15 6.75 3.35 6.75-3.35M12 10.5V20" />
+    </svg>
+  );
+}
+
+function LocationGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path
+        d="M19 10.25c0 5.25-7 10.25-7 10.25S5 15.5 5 10.25a7 7 0 1 1 14 0Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <circle
+        cx="12"
+        cy="10.25"
+        fill="none"
+        r="2.35"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function VerifiedGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path
+        d="m12 3.5 2.15 1.35 2.52-.1 1.35 2.14 2.14 1.36-.1 2.51 1.35 2.15-1.35 2.15.1 2.51-2.14 1.36-1.35 2.14-2.52-.1L12 20.5l-2.15 1.35-2.52.1-1.35-2.14-2.14-1.36.1-2.51L2.5 13.8l1.35-2.15-.1-2.51L5.9 7.78l1.35-2.14 2.52.1Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.45"
+      />
+      <path
+        d="m8.7 12.1 2.1 2.1 4.45-4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.9"
+      />
+    </svg>
+  );
+}
+
 export function DiscoveryHome() {
   const [categories, setCategories] = useState<PublicCategory[]>([]);
   const [cities, setCities] = useState<PublicCity[]>([]);
@@ -213,47 +306,48 @@ export function DiscoveryHome() {
       <Reveal>
         <section
           aria-labelledby="popular-categories"
-          id="how-it-works"
-          className="setu-home-section"
+          className="setu-home-section setu-category-section"
         >
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Browse
+          <div className="setu-category-section-head">
+            <div className="setu-category-section-copy">
+              <p className="setu-eyebrow">Explore by need</p>
+              <h2 id="popular-categories">Choose where to begin.</h2>
+              <p>
+                Start with a category, then narrow your search to the city and
+                provider that feel right.
               </p>
-              <h2
-                className="mt-1 text-2xl font-semibold"
-                id="popular-categories"
-              >
-                Popular categories
-              </h2>
             </div>
             <Link
               href="/categories"
-              className="text-sm font-semibold underline"
+              className="setu-category-all-link"
             >
-              View all categories
+              All categories <span aria-hidden="true">→</span>
             </Link>
           </div>
-          <div className="setu-category-grid mt-4">
-            {categories.slice(0, 4).map((item, index) => (
+          <div className="setu-category-grid">
+            {categories.slice(0, 6).map((item, index) => (
               <Link
                 key={item.slug}
                 href={`/categories/${item.slug}`}
-                className={`setu-reveal setu-reveal-delay-${Math.min(index + 1, 3)}`}
+                className={`setu-category-card setu-reveal setu-reveal-delay-${Math.min(index + 1, 3)}`}
               >
-                <Card className="setu-card-interactive h-full">
-                  <div
-                    className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-violet-50 font-bold text-violet-700"
-                    aria-hidden="true"
-                  >
-                    {item.name.slice(0, 1)}
+                <Card className="h-full">
+                  <div className="setu-category-card-top">
+                    <div className="setu-category-icon">
+                      <CategoryGlyph slug={item.slug} />
+                    </div>
+                    <span className="setu-category-index">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
                   </div>
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="mt-2 text-sm text-slate-600">
+                  <h3>{item.name}</h3>
+                  <p>
                     {item.description ??
                       "Explore approved providers in this category."}
                   </p>
+                  <span className="setu-category-cta">
+                    Browse services <span aria-hidden="true">↗</span>
+                  </span>
                 </Card>
               </Link>
             ))}
@@ -262,28 +356,40 @@ export function DiscoveryHome() {
       </Reveal>
 
       <Reveal>
-        <section aria-labelledby="popular-cities" className="setu-home-section">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Locations
+        <section
+          aria-labelledby="popular-cities"
+          className="setu-home-section setu-location-section"
+        >
+          <div className="setu-location-section-head">
+            <div className="setu-location-section-copy">
+              <p className="setu-eyebrow">Search close to home</p>
+              <h2 id="popular-cities">Find help in your city.</h2>
+              <p>
+                Explore providers that are listed for the places you live,
+                work, and need support.
               </p>
-              <h2 className="mt-1 text-2xl font-semibold" id="popular-cities">
-                Browse cities
-              </h2>
             </div>
-            <Link href="/cities" className="text-sm font-semibold underline">
-              View all cities
+            <Link href="/cities" className="setu-location-all-link">
+              All locations <span aria-hidden="true">→</span>
             </Link>
           </div>
-          <div className="setu-city-list mt-4">
-            {cities.slice(0, 8).map((item) => (
+          <div className="setu-city-grid">
+            {cities.slice(0, 8).map((item, index) => (
               <Link
                 key={item.id}
                 href={`/cities/${item.stateCode.toLowerCase()}/${item.slug}`}
-                className="setu-city-chip"
+                className={`setu-city-card setu-reveal setu-reveal-delay-${Math.min(index + 1, 3)}`}
               >
-                {item.name}, {item.stateName}
+                <span className="setu-city-icon">
+                  <LocationGlyph />
+                </span>
+                <span className="setu-city-card-copy">
+                  <strong>{item.name}</strong>
+                  <span>{item.stateName}</span>
+                </span>
+                <span className="setu-city-card-arrow" aria-hidden="true">
+                  ↗
+                </span>
               </Link>
             ))}
           </div>
@@ -292,35 +398,51 @@ export function DiscoveryHome() {
 
       {vendors.length > 0 ? (
         <Reveal>
-          <section className="setu-home-section" id="about">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  Approved businesses
+          <section className="setu-home-section setu-approved-section">
+            <div className="setu-approved-section-head">
+              <div className="setu-approved-section-copy">
+                <p className="setu-eyebrow">Reviewed on Setu</p>
+                <h2>Meet approved businesses.</h2>
+                <p>
+                  These providers have completed Setu&apos;s public review step
+                  and are ready to be explored.
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold">
-                  Verified providers
-                </h2>
               </div>
-              <Link href="/search" className="text-sm font-semibold underline">
-                View all providers
+              <Link href="/search" className="setu-approved-all-link">
+                See all providers <span aria-hidden="true">→</span>
               </Link>
             </div>
-            <div className="setu-vendor-grid mt-4">
-              {vendors.map((vendor) => (
-                <Link key={vendor.id} href={`/vendors/${vendor.slug}`}>
-                  <Card className="setu-card-interactive h-full">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                      Approved provider
+            <div className="setu-vendor-grid">
+              {vendors.map((vendor, index) => (
+                <Link
+                  key={vendor.id}
+                  href={`/vendors/${vendor.slug}`}
+                  className={`setu-vendor-card setu-reveal setu-reveal-delay-${Math.min(index + 1, 3)}`}
+                >
+                  <Card className="h-full">
+                    <div className="setu-vendor-card-top">
+                      <span className="setu-vendor-verified">
+                        <VerifiedGlyph /> Verified
+                      </span>
+                      <span className="setu-vendor-monogram" aria-hidden="true">
+                        {vendor.businessName.slice(0, 1)}
+                      </span>
+                    </div>
+                    <h3>{vendor.businessName}</h3>
+                    <p className="setu-vendor-location">
+                      <LocationGlyph />
+                      {vendor.primaryCity.name}, {vendor.primaryCity.stateName}
                     </p>
-                    <h3 className="mt-2 font-semibold">
-                      {vendor.businessName}
-                    </h3>
-                    <p className="mt-2 line-clamp-3 text-sm text-slate-600">
+                    <div className="setu-vendor-tags">
+                      {vendor.categories.slice(0, 2).map((category) => (
+                        <span key={category.slug}>{category.name}</span>
+                      ))}
+                    </div>
+                    <p className="setu-vendor-description line-clamp-3">
                       {vendor.descriptionExcerpt}
                     </p>
-                    <span className="mt-4 inline-block text-sm font-semibold text-violet-700">
-                      View profile →
+                    <span className="setu-vendor-cta">
+                      View profile <span aria-hidden="true">↗</span>
                     </span>
                   </Card>
                 </Link>
@@ -355,12 +477,15 @@ export function DiscoveryHome() {
             Share your business details for review and become discoverable on
             Setu after approval.
           </p>
-          <Link
-            href="/vendor/onboarding"
-            className="setu-button setu-button-primary setu-button-md"
-          >
-            Start vendor onboarding
-          </Link>
+          <div className="setu-provider-cta-action">
+            <Link
+              href="/vendor/onboarding"
+              className="setu-button setu-button-primary setu-button-md"
+            >
+              Start vendor onboarding
+            </Link>
+            <span>Powered by Dodun Soft Solutions</span>
+          </div>
         </section>
       </Reveal>
 

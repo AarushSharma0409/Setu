@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  ErrorState,
-  FormField,
-  Input,
-  PageContainer,
-  PageHeader,
-} from "@setu/ui";
+import { Button, ErrorState, FormField, Input } from "@setu/ui";
 import { useRouter } from "next/navigation";
 import React, { useState, type FormEvent } from "react";
 
+import { AdminAuthShell } from "../../../components/admin-auth-shell";
 import { adminApi } from "../../../lib/admin-api-client";
 
 export default function AdminTwoFactorPage() {
@@ -47,58 +40,56 @@ export default function AdminTwoFactorPage() {
   }
 
   return (
-    <PageContainer className="grid min-h-screen place-items-center py-10">
-      <PageHeader
-        eyebrow="Multi-factor authentication"
-        title="Verify your sign-in"
-        description={
-          recoveryMode
-            ? "Enter one unused recovery code. Each code works once."
-            : "Enter the six-digit code from your authenticator app."
-        }
-      />
-      <Card className="w-full max-w-md">
-        <p className="text-sm leading-6 text-slate-600">
-          {recoveryMode
-            ? "Enter one unused recovery code. Each code works once."
-            : "Enter the six-digit code from your authenticator app."}
-        </p>
-        <form
-          className="mt-6 space-y-4"
-          onSubmit={(event) => void submit(event)}
+    <AdminAuthShell
+      description={
+        recoveryMode
+          ? "Enter one unused recovery code. Each code works once."
+          : "Enter the six-digit code from your authenticator app."
+      }
+      eyebrow="Multi-factor authentication"
+      step="Step 2 of 2"
+      title="Verify your sign-in"
+    >
+      <p className="setu-admin-auth-note">
+        {recoveryMode
+          ? "Enter one unused recovery code. Each code works once."
+          : "Enter the six-digit code from your authenticator app."}
+      </p>
+      <form
+        className="setu-admin-auth-form"
+        onSubmit={(event) => void submit(event)}
+      >
+        <FormField
+          htmlFor="admin-otp"
+          label={recoveryMode ? "Recovery code" : "Authenticator code"}
+          required
         >
-          <FormField
-            htmlFor="admin-otp"
-            label={recoveryMode ? "Recovery code" : "Authenticator code"}
+          <Input
+            id="admin-otp"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            inputMode={recoveryMode ? "text" : "numeric"}
+            autoComplete="one-time-code"
+            placeholder={recoveryMode ? "xxxxxxxx-xxxxxxxx" : "123456"}
             required
-          >
-            <Input
-              id="admin-otp"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              inputMode={recoveryMode ? "text" : "numeric"}
-              autoComplete="one-time-code"
-              placeholder={recoveryMode ? "xxxxxxxx-xxxxxxxx" : "123456"}
-              required
-            />
-          </FormField>
-          <Button loading={loading} type="submit">
-            {loading ? "Checking" : "Continue"}
-          </Button>
-        </form>
-        <button
-          className="mt-4 text-sm font-medium text-slate-700 underline"
-          type="button"
-          onClick={() => setRecoveryMode((current) => !current)}
-        >
-          {recoveryMode ? "Use authenticator code" : "Use a recovery code"}
-        </button>
-        {error ? (
-          <div className="mt-4">
-            <ErrorState title="Verification failed" detail={error} />
-          </div>
-        ) : null}
-      </Card>
-    </PageContainer>
+          />
+        </FormField>
+        <Button className="w-full" loading={loading} type="submit">
+          {loading ? "Checking" : "Continue"}
+        </Button>
+      </form>
+      <button
+        className="setu-admin-auth-switch"
+        type="button"
+        onClick={() => setRecoveryMode((current) => !current)}
+      >
+        {recoveryMode ? "Use authenticator code" : "Use a recovery code"}
+      </button>
+      {error ? (
+        <div className="mt-4">
+          <ErrorState title="Verification failed" detail={error} />
+        </div>
+      ) : null}
+    </AdminAuthShell>
   );
 }

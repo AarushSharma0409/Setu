@@ -18,6 +18,7 @@
     "db:seed": "pnpm --filter @setu/api db:seed:dev",
     "db:seed:dev": "pnpm --filter @setu/api db:seed:dev",
     "db:seed:prod": "pnpm --filter @setu/api db:seed:prod",
+    "release:verify": "pnpm format:check && pnpm db:generate && turbo run lint typecheck test test:e2e --force && turbo run build --force && pnpm audit --audit-level high",
     "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1"
   },
   "devDependencies": {

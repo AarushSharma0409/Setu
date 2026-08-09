@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    devtoolSegmentExplorer: false,
+  },
   transpilePackages: ["@setu/ui", "@setu/types"],
   async headers() {
     await Promise.resolve();

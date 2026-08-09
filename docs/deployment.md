@@ -1,5 +1,21 @@
 # Deployment guide
 
+## Repository release gate
+
+Run this from the final release commit before building or publishing images:
+
+```bash
+pnpm release:verify
+```
+
+It performs formatting validation, Prisma client generation, separate uncached
+workspace check and production-build phases, and a high-severity dependency
+audit. Separating the check and build phases prevents Next.js build output from
+changing while TypeScript reads its generated route types. A passing result
+verifies repository artifacts only; the operational checklist in
+`docs/launch-checklist.md` must also be completed and recorded for the target
+environment.
+
 Build the three applications from the repository root:
 
 ```bash

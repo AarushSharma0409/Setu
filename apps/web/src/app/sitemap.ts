@@ -3,6 +3,10 @@ import type { MetadataRoute } from "next";
 import { discoveryApi } from "../lib/discovery-api";
 import { webEnv } from "../lib/env";
 
+// The API is deployed independently, so sitemap data must be fetched at request
+// time instead of making `next build` depend on a reachable API instance.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = webEnv.NEXT_PUBLIC_WEB_URL;
   try {

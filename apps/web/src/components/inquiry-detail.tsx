@@ -10,7 +10,7 @@ import {
   StatusBadge,
 } from "@setu/ui";
 import Link from "next/link";
-import React, { useEffect, useState, type FormEvent } from "react";
+import React, { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { publicApi } from "../lib/api-client";
 
@@ -30,7 +30,7 @@ export function InquiryDetail({
   const [sending, setSending] = useState(false);
   const [working, setWorking] = useState(false);
   const base = mode === "vendor" ? "/vendor/inquiries" : "/account/inquiries";
-  const load = () => {
+  const load = useCallback(() => {
     const token = sessionStorage.getItem(tokenKey);
     if (!token) {
       window.location.href = `/dev-auth?returnTo=${encodeURIComponent(`${base}/${id}`)}`;
@@ -47,10 +47,10 @@ export function InquiryDetail({
         ),
       )
       .finally(() => setLoading(false));
-  };
+  }, [base, id, mode]);
   useEffect(() => {
     load();
-  }, [id, mode]);
+  }, [load]);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const token = sessionStorage.getItem(tokenKey);

@@ -205,57 +205,101 @@ function Dashboard({
   error: boolean;
 }) {
   if (error) return <Unavailable />;
-  const cards: Array<[keyof InsuranceDashboard, string, string]> = [
+  const cards: Array<[keyof InsuranceDashboard, string, string, string]> = [
     [
       "activeOperatingModel",
       "Active operating model",
       "/insurance/operating-model",
+      "Controlled legal operating context",
     ],
     [
       "organizationsPendingVerification",
       "Pending organizations",
       "/insurance/organizations",
+      "Records awaiting verification",
     ],
-    ["activeInsurers", "Active insurers", "/insurance/organizations"],
+    [
+      "activeInsurers",
+      "Active insurers",
+      "/insurance/organizations",
+      "Approved organization records",
+    ],
     [
       "activeIntermediaries",
       "Active intermediaries",
       "/insurance/organizations",
+      "Active intermediary records",
     ],
     [
       "licencesExpiringSoon",
       "Licences expiring soon",
       "/insurance/organizations",
+      "Requires controlled review",
     ],
-    ["activePolicyTypes", "Active policy types", "/insurance/policy-types"],
-    ["publishedDisclosures", "Published disclosures", "/insurance/disclosures"],
+    [
+      "activePolicyTypes",
+      "Active policy types",
+      "/insurance/policy-types",
+      "Publicly enabled journey types",
+    ],
+    [
+      "publishedDisclosures",
+      "Published disclosures",
+      "/insurance/disclosures",
+      "Immutable published content",
+    ],
     [
       "publishedConsentTemplates",
       "Published consent templates",
       "/insurance/consent-templates",
+      "Purpose-specific configuration",
     ],
   ];
   return (
     <QueryState pending={pending}>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(([key, label, href]) => (
+      <section className="setu-insurance-dashboard-hero">
+        <div>
+          <p className="setu-admin-dashboard-kicker">Configuration control</p>
+          <h2>Insurance foundation at a glance.</h2>
+          <p>
+            Review the private configuration that supports Setu&apos;s insurance
+            journey. Customer quotations, payments, and policy issuance remain
+            outside this workspace.
+          </p>
+        </div>
+        <div className="setu-insurance-dashboard-hero-status">
+          <span className="setu-admin-session-signal" aria-hidden="true" />
+          Controlled administration
+        </div>
+      </section>
+      <div className="setu-insurance-dashboard-grid">
+        {cards.map(([key, label, href, detail], index) => (
           <Link href={href} key={key}>
-            <Card className="setu-card-interactive">
-              <p className="text-sm text-slate-500">{label}</p>
-              <p className="mt-2 text-3xl font-bold">{data?.[key] ?? 0}</p>
+            <Card className="setu-insurance-dashboard-metric h-full">
+              <div>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <em>Explore ↗</em>
+              </div>
+              <p>{label}</p>
+              <strong>{data?.[key] ?? 0}</strong>
+              <small>{detail}</small>
             </Card>
           </Link>
         ))}
       </div>
-      <Card className="mt-6">
-        <p className="font-semibold">
-          Insurance administration is configuration-only
-        </p>
-        <p className="mt-2 text-sm text-slate-600">
-          No customer quotations, products, payments, purchases, policy
-          issuance, or claims are enabled from this workspace.
-        </p>
-      </Card>
+      <section className="setu-insurance-dashboard-paths">
+        {[
+          ["01", "Operating model", "Confirm the legal and regulatory context."],
+          ["02", "Organizations", "Review insurers and intermediaries."],
+          ["03", "Journey content", "Control policy types, disclosures, and consent."],
+        ].map(([index, title, detail]) => (
+          <div key={index}>
+            <span>{index}</span>
+            <strong>{title}</strong>
+            <small>{detail}</small>
+          </div>
+        ))}
+      </section>
     </QueryState>
   );
 }
