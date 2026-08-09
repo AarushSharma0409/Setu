@@ -10,6 +10,7 @@ import {
   Card,
   ErrorState,
   EmptyState,
+  FeatureChip,
   Input,
   LoadingState,
   PageContainer,
@@ -60,7 +61,7 @@ export function DiscoveryHome() {
   }
 
   return (
-    <PageContainer className="setu-home-page space-y-16">
+    <PageContainer className="setu-home-page setu-home-stack">
       <Reveal className="setu-landing-hero-motion">
         <header className="setu-landing-hero">
           <div className="setu-landing-copy">
@@ -360,6 +361,39 @@ export function DiscoveryHome() {
           >
             Start vendor onboarding
           </Link>
+        </section>
+      </Reveal>
+
+      <Reveal>
+        <section
+          aria-label="Setu platform qualities"
+          className="setu-feature-chip-row"
+        >
+          <FeatureChip
+            detail="Clear, focused journeys"
+            icon="✦"
+            label="Modern and calm"
+          />
+          <FeatureChip
+            detail="Designed around every screen"
+            icon="▣"
+            label="Responsive by default"
+          />
+          <FeatureChip
+            detail="Respectful, reduced-motion aware"
+            icon="◌"
+            label="Thoughtful interactions"
+          />
+          <FeatureChip
+            detail="Find, compare, then connect"
+            icon="↗"
+            label="Easy to explore"
+          />
+          <FeatureChip
+            detail="Private account experiences"
+            icon="◇"
+            label="Built with care"
+          />
         </section>
       </Reveal>
     </PageContainer>

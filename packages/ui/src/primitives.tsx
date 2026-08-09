@@ -13,6 +13,8 @@ import {
 type ButtonVariant =
   "primary" | "secondary" | "outline" | "ghost" | "danger" | "link";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
+export type SurfaceElevation =
+  "flat" | "raised-sm" | "raised" | "raised-lg" | "inset";
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary: "setu-button-primary",
@@ -152,15 +154,137 @@ export function FormField({
   );
 }
 
+export interface CardProps extends HTMLAttributes<HTMLElement> {
+  elevation?: Exclude<SurfaceElevation, "flat" | "inset">;
+}
+
 export function Card({
   children,
   className,
+  elevation = "raised",
   ...props
-}: PropsWithChildren<HTMLAttributes<HTMLElement>>) {
+}: PropsWithChildren<CardProps>) {
   return (
-    <section className={cx("setu-card", className)} {...props}>
+    <section
+      className={cx("setu-card", `setu-card-${elevation}`, className)}
+      {...props}
+    >
       {children}
     </section>
+  );
+}
+
+export function Surface({
+  children,
+  className,
+  elevation = "flat",
+  ...props
+}: PropsWithChildren<
+  HTMLAttributes<HTMLElement> & { elevation?: SurfaceElevation }
+>) {
+  return (
+    <section
+      className={cx("setu-surface", `setu-surface-${elevation}`, className)}
+      {...props}
+    >
+      {children}
+    </section>
+  );
+}
+
+export function MetricCard({
+  detail,
+  label,
+  value,
+}: {
+  detail?: ReactNode;
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <Card className="setu-metric-card" elevation="raised-sm">
+      <p className="setu-metric-label">{label}</p>
+      <p className="setu-metric-value">{value}</p>
+      {detail ? <p className="setu-metric-detail">{detail}</p> : null}
+    </Card>
+  );
+}
+
+export function FeatureChip({
+  detail,
+  icon,
+  label,
+}: {
+  detail: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="setu-feature-chip">
+      <span aria-hidden="true" className="setu-feature-chip-icon">
+        {icon}
+      </span>
+      <span>
+        <strong>{label}</strong>
+        <small>{detail}</small>
+      </span>
+    </div>
+  );
+}
+
+export function ProgressRing({
+  label = "Progress",
+  size = 72,
+  value,
+}: {
+  label?: string;
+  size?: number;
+  value: number;
+}) {
+  const safeValue = Math.min(100, Math.max(0, value));
+  const stroke = 7;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - safeValue / 100);
+
+  return (
+    <div
+      aria-label={`${label}: ${safeValue}%`}
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={safeValue}
+      className="setu-progress-ring"
+      role="progressbar"
+      style={{ width: size, height: size }}
+    >
+      <svg
+        aria-hidden="true"
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        width={size}
+      >
+        <circle
+          className="setu-progress-ring-track"
+          cx={size / 2}
+          cy={size / 2}
+          fill="none"
+          r={radius}
+          strokeWidth={stroke}
+        />
+        <circle
+          className="setu-progress-ring-value"
+          cx={size / 2}
+          cy={size / 2}
+          fill="none"
+          r={radius}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          strokeWidth={stroke}
+        />
+      </svg>
+      <span>{safeValue}%</span>
+    </div>
   );
 }
 

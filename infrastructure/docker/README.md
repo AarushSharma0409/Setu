@@ -20,3 +20,8 @@ docker build -f infrastructure/docker/Dockerfile.admin -t setu-admin:latest .
 `docker-compose.production.yml` is a deployment template. Supply production
 environment files and secrets through the deployment platform; never commit
 them or use the local compose credentials in production.
+
+The API service includes a liveness health check. The public web and admin
+services wait for that check before starting, which makes a staging smoke test
+fail fast when API startup cannot complete. Run database migrations as a
+separate deployment job before starting application services.

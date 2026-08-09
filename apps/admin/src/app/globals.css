@@ -8,23 +8,23 @@ body {
   background:
     radial-gradient(
       circle at 84% 8%,
-      rgb(196 181 253 / 0.12),
+      rgb(128 108 246 / 0.12),
       transparent 22rem
     ),
-    var(--setu-background);
+    var(--setu-surface-root);
   color: var(--setu-foreground);
   margin: 0;
 }
 
 .setu-admin-header {
   align-items: center;
-  background: rgb(255 255 255 / 0.84);
+  background: rgb(247 249 252 / 0.88);
   border-bottom: 1px solid var(--setu-border);
   display: flex;
   justify-content: space-between;
   min-height: 4.25rem;
   padding: 0 1rem;
-  box-shadow: var(--setu-shadow-sm);
+  box-shadow: var(--setu-shadow-raised-sm);
   backdrop-filter: blur(14px);
   position: relative;
 }
@@ -52,23 +52,19 @@ body {
 }
 .setu-admin-layout {
   display: grid;
-  gap: 1.5rem;
+  gap: 2rem;
   grid-template-columns: 15rem minmax(0, 1fr);
 }
 .setu-admin-sidebar {
-  background: linear-gradient(
-    165deg,
-    var(--setu-midnight),
-    var(--setu-midnight-soft)
-  );
-  border: 1px solid rgb(167 139 250 / 0.22);
+  background: var(--setu-surface-raised);
+  border: 1px solid var(--setu-border);
   border-radius: var(--setu-radius-lg);
   padding: 0.75rem;
-  box-shadow: var(--setu-shadow-sm);
+  box-shadow: var(--setu-shadow-raised);
 }
 .setu-admin-nav-link {
   border-radius: var(--setu-radius-md);
-  color: #cbd5e1;
+  color: var(--setu-text-secondary);
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
@@ -76,13 +72,11 @@ body {
 }
 .setu-admin-nav-link:hover,
 .setu-admin-nav-link-active {
-  background: linear-gradient(
-    90deg,
-    rgb(124 58 237 / 0.8),
-    rgb(168 85 247 / 0.46)
-  );
-  color: white;
-  box-shadow: inset 0 0 0 1px rgb(196 181 253 / 0.2);
+  background: var(--setu-accent-soft);
+  color: #314dbb;
+  box-shadow:
+    var(--setu-shadow-inset),
+    inset 0 0 0 1px rgb(95 124 255 / 0.3);
 }
 .setu-admin-main {
   min-width: 0;

@@ -1,0 +1,3 @@
+-- Historical no-op. This migration was accidentally created before the I1
+-- foundation migration and is retained only so existing local histories remain
+-- reconcilable. I1 creates the correctly named indexes in its own migration.

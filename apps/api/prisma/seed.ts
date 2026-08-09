@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 import {
   AccountStatus,
   AdminRole,
+  InsuranceCapability,
+  InsuranceOperatingModelStatus,
   PrismaClient,
   UserRole,
   VendorStatus,
@@ -45,6 +47,9 @@ async function main() {
     await seedPublicFixtures();
   }
   await seedDevelopmentAdmin();
+  if (seedMode === "development") {
+    await seedInsuranceFoundation();
+  }
 }
 
 async function seedPublicFixtures() {
@@ -367,6 +372,316 @@ async function seedReferenceData() {
 
   console.info(
     `Seeded ${categories.length} categories and ${states.length} states with cities.`,
+  );
+}
+
+async function seedInsuranceFoundation() {
+  const admin = await prisma.adminUser.findUnique({
+    where: { email: process.env.ADMIN_SEED_EMAIL },
+    select: { id: true },
+  });
+  if (!admin) return;
+
+  const insuranceDemoMode = process.env.SEED_INSURANCE_DEMO_MODE === "true";
+  const demoEffectiveFrom = insuranceDemoMode ? new Date() : null;
+  const demoLineStatus = insuranceDemoMode ? "ACTIVE" : "DRAFT";
+  const demoCapabilities = insuranceDemoMode
+    ? [
+        InsuranceCapability.DISPLAY_INSURANCE_PRODUCTS,
+        InsuranceCapability.COLLECT_CUSTOMER_NEEDS,
+        InsuranceCapability.REQUEST_QUOTES,
+        InsuranceCapability.COMPARE_QUOTES,
+        InsuranceCapability.RANK_QUOTES,
+        InsuranceCapability.RECOMMEND_PRODUCTS,
+      ]
+    : [];
+
+  const lines = [
+    {
+      code: "LIFE",
+      name: "Example life line",
+      description:
+        "Development-only configuration; not an enabled insurance offering.",
+      sortOrder: 10,
+    },
+    {
+      code: "HEALTH",
+      name: "Example health line",
+      description:
+        "Development-only configuration; not an enabled insurance offering.",
+      sortOrder: 20,
+    },
+    {
+      code: "GENERAL",
+      name: "Example general line",
+      description:
+        "Development-only configuration; not an enabled insurance offering.",
+      sortOrder: 30,
+    },
+  ] as const;
+  for (const line of lines) {
+    await prisma.insuranceLine.upsert({
+      where: { code: line.code },
+      create: { ...line, status: demoLineStatus },
+      update: { ...line, status: demoLineStatus },
+    });
+  }
+  const healthLine = await prisma.insuranceLine.findUniqueOrThrow({
+    where: { code: "HEALTH" },
+    select: { id: true },
+  });
+  const healthPolicyType = await prisma.insurancePolicyType.upsert({
+    where: { slug: "example-health-policy-type" },
+    create: {
+      insuranceLineId: healthLine.id,
+      code: "EXAMPLE_HEALTH",
+      name: "Example health policy type",
+      slug: "example-health-policy-type",
+      description:
+        "Development catalogue configuration. Product display remains feature-gated.",
+      status: "ACTIVE",
+      isEnabledForMvp: true,
+      sortOrder: 10,
+    },
+    update: { status: "ACTIVE", isEnabledForMvp: true },
+  });
+
+  await prisma.insuranceOperatingModel.upsert({
+    where: {
+      legalEntityName_primaryJurisdiction_configurationVersion: {
+        legalEntityName: "Setu Example Insurance Entity",
+        primaryJurisdiction: "Example jurisdiction",
+        configurationVersion: 1,
+      },
+    },
+    create: {
+      legalEntityName: "Setu Example Insurance Entity",
+      tradeName: "Setu Insurance Example",
+      operatingRole: "OTHER_LICENSED_MODEL",
+      licenceNumber: "EXAMPLE-NOT-A-LICENCE-0001",
+      licenceAuthority: "Example authority only",
+      licenceValidFrom: new Date("2026-01-01T00:00:00.000Z"),
+      status: insuranceDemoMode
+        ? InsuranceOperatingModelStatus.ACTIVE
+        : InsuranceOperatingModelStatus.DRAFT,
+      countryCode: "IN",
+      primaryJurisdiction: "Example jurisdiction",
+      permittedInsuranceLines: [],
+      permittedOrganizationTypes: [],
+      permittedCapabilities: demoCapabilities,
+      restrictedCapabilities: [],
+      configurationVersion: 1,
+      effectiveFrom: demoEffectiveFrom,
+      createdByAdminUserId: admin.id,
+    },
+    update: {
+      status: insuranceDemoMode
+        ? InsuranceOperatingModelStatus.ACTIVE
+        : InsuranceOperatingModelStatus.DRAFT,
+      permittedCapabilities: demoCapabilities,
+      restrictedCapabilities: [],
+      effectiveFrom: demoEffectiveFrom,
+    },
+  });
+
+  const insurer = await prisma.insuranceOrganization.upsert({
+    where: { slug: "example-insurer-not-real" },
+    create: {
+      type: "INSURER",
+      legalName: "Example Insurer Not Real Ltd.",
+      tradeName: "Example Insurer",
+      slug: "example-insurer-not-real",
+      registrationNumber: "EXAMPLE-INSURER-0001",
+      regulatoryAuthority: "Example authority only",
+      status: "DRAFT",
+      supportEmail: "insurance-example@example.test",
+      grievanceEmail: "grievance-example@example.test",
+      countryCode: "IN",
+      primaryJurisdiction: "Example jurisdiction",
+    },
+    update: { status: "DRAFT" },
+  });
+
+  const demoProduct = await prisma.insuranceProduct.upsert({
+    where: { slug: "example-health-cover-not-real" },
+    create: {
+      organizationId: insurer.id,
+      policyTypeId: healthPolicyType.id,
+      code: "EXAMPLE_HEALTH_COVER",
+      slug: "example-health-cover-not-real",
+      status: insuranceDemoMode ? "ACTIVE" : "DRAFT",
+      createdByAdminUserId: admin.id,
+    },
+    update: { status: insuranceDemoMode ? "ACTIVE" : "DRAFT" },
+  });
+  const demoProductVersion = await prisma.insuranceProductVersion.upsert({
+    where: {
+      productId_versionNumber: {
+        productId: demoProduct.id,
+        versionNumber: 1,
+      },
+    },
+    create: {
+      productId: demoProduct.id,
+      versionNumber: 1,
+      status: insuranceDemoMode ? "APPROVED" : "DRAFT",
+      name: "Example Health Cover",
+      shortDescription:
+        "Development-only example product. It is not an insurance offering.",
+      longDescription:
+        "This fictional fixture exists only to demonstrate the Setu insurance interface locally.",
+      coverageSummary: "Example-only display data; no coverage is offered.",
+      effectiveFrom: demoEffectiveFrom,
+      createdByAdminUserId: admin.id,
+      approvedAt: insuranceDemoMode ? demoEffectiveFrom : null,
+      approvedByAdminUserId: insuranceDemoMode ? admin.id : null,
+    },
+    update: {
+      status: insuranceDemoMode ? "APPROVED" : "DRAFT",
+      effectiveFrom: demoEffectiveFrom,
+      approvedAt: insuranceDemoMode ? demoEffectiveFrom : null,
+      approvedByAdminUserId: insuranceDemoMode ? admin.id : null,
+    },
+  });
+  await prisma.insuranceProduct.update({
+    where: { id: demoProduct.id },
+    data: { currentVersionId: demoProductVersion.id },
+  });
+
+  const demoQuestionSchema = await prisma.insuranceQuestionSchema.upsert({
+    where: {
+      policyTypeId_version: {
+        policyTypeId: healthPolicyType.id,
+        version: 1,
+      },
+    },
+    create: {
+      policyTypeId: healthPolicyType.id,
+      name: "Example health needs assessment",
+      version: 1,
+      status: insuranceDemoMode ? "PUBLISHED" : "DRAFT",
+      effectiveFrom: demoEffectiveFrom,
+      createdByAdminUserId: admin.id,
+      publishedAt: insuranceDemoMode ? demoEffectiveFrom : null,
+      publishedByAdminUserId: insuranceDemoMode ? admin.id : null,
+    },
+    update: {
+      status: insuranceDemoMode ? "PUBLISHED" : "DRAFT",
+      effectiveFrom: demoEffectiveFrom,
+      publishedAt: insuranceDemoMode ? demoEffectiveFrom : null,
+      publishedByAdminUserId: insuranceDemoMode ? admin.id : null,
+    },
+  });
+  const demoQuestionSection = await prisma.insuranceQuestionSection.upsert({
+    where: {
+      questionSchemaId_key: {
+        questionSchemaId: demoQuestionSchema.id,
+        key: "coverage-basics",
+      },
+    },
+    create: {
+      questionSchemaId: demoQuestionSchema.id,
+      key: "coverage-basics",
+      title: "Coverage basics",
+      description: "Example-only local development question.",
+      sortOrder: 10,
+    },
+    update: {
+      title: "Coverage basics",
+      description: "Example-only local development question.",
+      sortOrder: 10,
+    },
+  });
+  await prisma.insuranceQuestion.upsert({
+    where: {
+      sectionId_key: {
+        sectionId: demoQuestionSection.id,
+        key: "age",
+      },
+    },
+    create: {
+      sectionId: demoQuestionSection.id,
+      key: "age",
+      label: "What is your age?",
+      description: "Development-only example question.",
+      fieldType: "NUMBER",
+      isRequired: true,
+      sortOrder: 10,
+      validationConfig: { minimum: 18, maximum: 100 },
+    },
+    update: {
+      label: "What is your age?",
+      description: "Development-only example question.",
+      fieldType: "NUMBER",
+      isRequired: true,
+      sortOrder: 10,
+      validationConfig: { minimum: 18, maximum: 100 },
+    },
+  });
+  await prisma.insuranceOrganizationLine.upsert({
+    where: {
+      organizationId_insuranceLineId: {
+        organizationId: insurer.id,
+        insuranceLineId: healthLine.id,
+      },
+    },
+    create: { organizationId: insurer.id, insuranceLineId: healthLine.id },
+    update: {},
+  });
+  await prisma.insuranceOrganization.upsert({
+    where: { slug: "example-intermediary-not-real" },
+    create: {
+      type: "INTERMEDIARY",
+      legalName: "Example Intermediary Not Real Ltd.",
+      slug: "example-intermediary-not-real",
+      registrationNumber: "EXAMPLE-INTERMEDIARY-0001",
+      regulatoryAuthority: "Example authority only",
+      status: "DRAFT",
+      supportEmail: "intermediary-example@example.test",
+      grievanceEmail: "grievance-intermediary@example.test",
+      countryCode: "IN",
+      primaryJurisdiction: "Example jurisdiction",
+    },
+    update: { status: "DRAFT" },
+  });
+  await prisma.insuranceDisclosureTemplate.upsert({
+    where: {
+      code_audience_version: {
+        code: "EXAMPLE_OPERATING_NOTICE",
+        audience: "ADMIN",
+        version: 1,
+      },
+    },
+    create: {
+      code: "EXAMPLE_OPERATING_NOTICE",
+      name: "Example operating notice",
+      audience: "ADMIN",
+      purpose: "OPERATING_ROLE",
+      content: "Development-only draft. This is not a regulatory disclosure.",
+      version: 1,
+      status: "DRAFT",
+      createdByAdminUserId: admin.id,
+    },
+    update: { status: "DRAFT" },
+  });
+  await prisma.insuranceConsentTemplate.upsert({
+    where: { code_version: { code: "EXAMPLE_DATA_SHARING", version: 1 } },
+    create: {
+      code: "EXAMPLE_DATA_SHARING",
+      name: "Example data sharing consent",
+      purpose: "INSURER_DATA_SHARING",
+      content:
+        "Development-only draft. No customer consent is collected by Sprint I1.",
+      version: 1,
+      status: "DRAFT",
+      createdByAdminUserId: admin.id,
+    },
+    update: { status: "DRAFT" },
+  });
+  console.info(
+    insuranceDemoMode
+      ? "Seeded development-only insurance demo fixtures."
+      : "Seeded draft-only insurance foundation fixtures.",
   );
 }
 

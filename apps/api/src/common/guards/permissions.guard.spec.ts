@@ -17,4 +17,25 @@ describe("admin permission matrix", () => {
       AdminPermission.SUSPEND_VENDOR,
     );
   });
+
+  it("keeps insurance operating-model changes with super administrators", () => {
+    expect(permissionsForRole(AdminRole.SUPER_ADMIN)).toContain(
+      AdminPermission.INSURANCE_OPERATING_MODEL_MANAGE,
+    );
+    expect(permissionsForRole(AdminRole.OPERATIONS)).not.toContain(
+      AdminPermission.INSURANCE_OPERATING_MODEL_MANAGE,
+    );
+  });
+
+  it("separates catalogue editing from approval", () => {
+    expect(permissionsForRole(AdminRole.OPERATIONS)).toContain(
+      AdminPermission.INSURANCE_PRODUCT_EDIT,
+    );
+    expect(permissionsForRole(AdminRole.OPERATIONS)).not.toContain(
+      AdminPermission.INSURANCE_PRODUCT_APPROVE,
+    );
+    expect(permissionsForRole(AdminRole.REVIEWER)).toContain(
+      AdminPermission.INSURANCE_PRODUCT_APPROVE,
+    );
+  });
 });

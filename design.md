@@ -1,1124 +1,495 @@
-# Setu MVP UI/UX Design Specification
+# Setu Neumorphic UI/UX Design System
 
-## 1. Purpose
+## 1. Design Direction
 
-This document defines the visual language, interaction model, responsive behavior, and accessibility standards for the Setu MVP.
+Setu should adopt a modern **soft-neumorphic interface** inspired by the approved visual reference.
 
-The goal is to make Setu feel like a complete, trustworthy marketplace product rather than a collection of individually implemented screens.
+The design language should feel clean, calm, tactile, premium, approachable, modern, spacious, trustworthy, and highly legible. The interface should not use exaggerated skeuomorphism. Neumorphism is used selectively to create depth and hierarchy while preserving accessibility, clarity, and performance.
 
-The visual direction is based on a modern, immersive service-marketplace experience with:
+The design must remain suitable for public marketplace discovery, vendor onboarding and dashboards, insurance customer journeys, quote comparison, account dashboards, insurer/organization workflows, admin operations, support, and monitoring.
 
-- White and soft-neutral surfaces
-- Violet brand accents with restrained luminous highlights
-- Rounded cards and controls
-- Generous spacing
-- Clear typography
-- Layered depth and spatial composition
-- Smooth, choreographed motion
-- Tactile microinteractions
-- Mobile-first interaction
+## 2. Core Visual Principle
 
-The design must support four related experiences:
+The UI should visually feel like components are softly molded from the same surface.
 
-1. Public marketplace
-2. User account and inquiries
-3. Vendor onboarding and lead management
-4. Admin verification and operations
+Use pale neutral backgrounds, soft inset and outset shadows, large rounded corners, subtle blue-violet accents, restrained pastel highlights, high whitespace, minimal hard borders, elevated cards, soft pressed states, subtle inset inputs, circular soft buttons, and restrained gradients.
 
----
+Avoid harsh black shadows, high-gloss glass effects, excessive gradients, excessive 3D effects, low-contrast text, fake physical controls, strong inner shadows on text areas, and excessive raised surfaces.
 
-## 2. Design Principles
+## 3. Base Palette
 
-### Trust first
+Use semantic design tokens rather than raw values throughout components.
 
-The interface must feel reliable and calm. Avoid exaggerated claims, fake metrics, or overly decorative visuals.
-
-### Clear hierarchy
-
-Every page should make its primary purpose and next action obvious.
-
-### Progressive disclosure
-
-Show advanced details only when they are useful. Avoid overwhelming users with dense controls.
-
-### Consistency
-
-Use the same spacing, typography, color, status, and component conventions throughout the product.
-
-### Mobile first
-
-Public and vendor experiences must work comfortably on narrow screens. Admin workflows must remain usable on tablets.
-
-### Immersion with purpose
-
-The product should feel alive through depth, continuity, and responsive motion. Animation must clarify relationships, acknowledge input, and preserve context—not become visual noise or delay task completion.
-
-### Accessible by default
-
-Use semantic HTML, keyboard-friendly controls, visible focus, suitable contrast, and non-color status indicators.
-
----
-
-## 3. Brand Identity
-
-### Product name
-
-Setu
-
-### Brand personality
-
-- Trustworthy
-- Modern
-- Helpful
-- Professional
-- Inclusive
-- Calm
-
-### Primary color
-
-Violet is the main brand color.
+### Background
 
 ```css
---primary-50: #f5f3ff;
---primary-100: #ede9fe;
---primary-200: #ddd6fe;
---primary-300: #c4b5fd;
---primary-400: #a78bfa;
---primary-500: #8b5cf6;
---primary-600: #7c3aed;
---primary-700: #6d28d9;
---primary-800: #5b21b6;
---primary-900: #4c1d95;
+--surface-root: #eef2f8;
+--surface-soft: #f3f6fb;
+--surface-raised: #f7f9fc;
+--surface-muted: #e7ecf5;
 ```
 
-Primary usage:
-
-- Main buttons
-- Active navigation
-- Links
-- Focus rings
-- Selected controls
-- Soft emphasis backgrounds
-
-Do not use violet for every visual element.
-
-### Neutral colors
+### Text
 
 ```css
---neutral-0: #ffffff;
---neutral-50: #fafafa;
---neutral-100: #f5f5f5;
---neutral-200: #e5e7eb;
---neutral-300: #d1d5db;
---neutral-500: #6b7280;
---neutral-700: #374151;
---neutral-900: #111827;
+--text-primary: #171a22;
+--text-secondary: #5f6675;
+--text-muted: #8b92a2;
+--text-inverse: #ffffff;
 ```
 
-### Semantic colors
+### Accent
 
 ```css
---success: #16a34a;
---warning: #d97706;
---danger: #dc2626;
---info: #2563eb;
+--accent-primary: #5f7cff;
+--accent-primary-hover: #4d6af2;
+--accent-secondary: #806cf6;
+--accent-soft: #dfe6ff;
 ```
 
-Every semantic color must be paired with readable text or an icon.
-
----
-
-## 4. Typography
-
-Preferred font stack:
+### Semantic
 
 ```css
-font-family: Inter, Geist, ui-sans-serif, system-ui, sans-serif;
+--success: #52cfa7;
+--success-soft: #dff7ef;
+--warning: #f1bd64;
+--warning-soft: #fff3da;
+--danger: #ef767a;
+--danger-soft: #fde7e8;
+--info: #6d8cff;
+--info-soft: #e7ecff;
 ```
+
+Actual implementation should reuse existing Setu brand tokens when possible and map these values into the existing token system.
+
+## 4. Neumorphic Shadow System
+
+Centralize all elevation.
+
+### Raised Surface
+
+```css
+box-shadow:
+  10px 10px 24px rgba(163, 177, 198, 0.28),
+  -10px -10px 24px rgba(255, 255, 255, 0.78);
+```
+
+### Small Raised Surface
+
+```css
+box-shadow:
+  5px 5px 12px rgba(163, 177, 198, 0.24),
+  -5px -5px 12px rgba(255, 255, 255, 0.72);
+```
+
+### Pressed / Inset
+
+```css
+box-shadow:
+  inset 4px 4px 8px rgba(163, 177, 198, 0.20),
+  inset -4px -4px 8px rgba(255, 255, 255, 0.72);
+```
+
+### Floating Action
+
+```css
+box-shadow:
+  0 8px 22px rgba(95, 124, 255, 0.26),
+  6px 6px 14px rgba(163, 177, 198, 0.22),
+  -5px -5px 12px rgba(255, 255, 255, 0.70);
+```
+
+Use shadows sparingly. Dense admin tables should use flatter surfaces.
+
+## 5. Radius System
+
+```css
+--radius-sm: 10px;
+--radius-md: 14px;
+--radius-lg: 18px;
+--radius-xl: 24px;
+--radius-2xl: 30px;
+--radius-pill: 999px;
+```
+
+Recommended: input 12–14px, button 12–16px, card 18–24px, dashboard panel 20–28px, modal 24–28px, mobile shell 28–34px where visually appropriate.
+
+## 6. Spacing
+
+Use a consistent 4px-based system:
+
+```text
+4 8 12 16 20 24 32 40 48 64 80
+```
+
+Cards should have generous internal spacing. Desktop dashboard cards: 24–32px padding. Mobile cards: 16–20px padding.
+
+## 7. Typography
+
+Keep the existing Setu font stack unless there is a strong technical reason to change. Typography should be crisp and minimal.
 
 Recommended scale:
 
-| Role          |  Desktop |   Mobile | Weight |
-| ------------- | -------: | -------: | -----: |
-| Display       |    56 px |    40 px |    700 |
-| Page title    |    36 px |    30 px |    700 |
-| Section title |    28 px |    24 px |    650 |
-| Card title    |    18 px |    17 px |    600 |
-| Body          |    16 px |    16 px |    400 |
-| Small body    |    14 px |    14 px |    400 |
-| Caption       | 12–13 px | 12–13 px |    500 |
-
-Guidelines:
-
-- Use sentence case.
-- Avoid excessive bold text.
-- Use muted text only for secondary information.
-- Keep body line-height between 1.5 and 1.7.
-- Limit long-form content to a readable width.
-
----
-
-## 5. Spacing and Layout
-
-### Spacing scale
-
-Use a consistent 4 px base scale.
-
 ```text
-4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96
+Display: 44–56px
+H1: 32–40px
+H2: 26–32px
+H3: 20–24px
+Body large: 17–18px
+Body: 15–16px
+Small: 13–14px
+Meta: 12px
 ```
 
-### Public layout
+Use medium/semibold headings, regular body text, muted metadata, and strong numeric hierarchy in dashboards. Avoid excessive bold copy.
 
-- Maximum width: 1280 px
-- Mobile page padding: 16 px
-- Tablet page padding: 24 px
-- Desktop page padding: 32 px
-- Section spacing: 64–96 px desktop, 40–64 px mobile
+## 8. Main Layout
 
-### Dashboard layout
+### Desktop
 
-- Sidebar: 240 px
-- Main content max width: 1440 px
-- Main content padding: 24–32 px
-- Mobile padding: 16 px
+Use a light left navigation plus main content workspace. The sidebar should appear as part of the soft surface rather than a detached dark panel.
 
-### Border radius
+Desktop shell may use max-width 1440–1600px, a rounded outer app frame where appropriate, and a soft root shadow. For full-bleed production pages, use the neumorphic system inside standard viewport layouts rather than forcing every page into a floating mockup frame.
 
-```text
-Controls: 10–12 px
-Cards: 16 px
-Large panels: 20–24 px
-Pills: 999 px
-```
+### Mobile
 
-### Shadows
+Use a top app bar, bottom navigation where appropriate, floating action only for high-frequency actions, stacked content, and full-width cards with 16px gutters.
+
+## 9. Sidebar
+
+Use a light soft panel. Navigation items use icon + label + active state. Active item uses a soft raised/inset background, accent icon/text, and subtle blue-violet emphasis. Inactive items remain mostly flat. Avoid rendering every navigation row as a card.
+
+## 10. Top Navigation
+
+Desktop top bar may include search, notification button, account, and contextual primary action. Search field should use an inset surface. Utility icon buttons should use circular or rounded soft raised controls.
+
+## 11. Buttons
+
+### Primary
+
+Use a blue-violet gradient only for primary actions.
 
 ```css
---shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
---shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
---shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12);
+background: linear-gradient(135deg, #6f8cff, #5571ef);
 ```
 
-Prefer borders over shadows for standard cards.
+Use a raised shadow. Hover: slight lift and stronger accent shadow. Pressed: reduce elevation and apply a subtle inset effect.
 
----
+### Secondary
 
-## 6. Design Tokens
+Neutral soft raised surface.
 
-Use semantic tokens.
+### Ghost
 
-```css
---background: var(--neutral-50);
---foreground: var(--neutral-900);
---surface: var(--neutral-0);
---surface-muted: var(--neutral-100);
---border: var(--neutral-200);
---border-strong: var(--neutral-300);
---primary: var(--primary-600);
---primary-hover: var(--primary-700);
---primary-soft: var(--primary-50);
---focus-ring: var(--primary-400);
---muted-text: var(--neutral-500);
-```
+Flat, no neumorphic shadow.
 
-Avoid repeated arbitrary colors in components.
+### Danger
 
----
+Use red as a semantic accent, not a red neumorphic slab.
 
-## 7. Components
+## 12. Button States
 
-### Buttons
+All buttons require hover, active, focus-visible, disabled, and loading states. Focus must use a real high-contrast focus ring. Do not rely on shadow changes alone for keyboard focus.
 
-Variants:
+## 13. Inputs
 
-- Primary
-- Secondary
-- Outline
-- Ghost
-- Danger
-- Link
+Inputs should feel gently inset. Use a neutral root surface, inset shadow, clear border or focus ring when active, visible label, helper text, and error text. Do not over-darken inset shadows.
 
-Sizes:
+Focus uses an accent border/ring plus reduced inset shadow. Accessibility wins over pure neumorphism.
 
-- Small
-- Medium
-- Large
-- Icon
+## 14. Cards
 
-States:
-
-- Default
-- Hover
-- Focus-visible
-- Active
-- Disabled
-- Loading
-
-Primary buttons use solid violet. Secondary buttons use soft violet or neutral surfaces. Danger buttons use semantic red.
-
-### Inputs
-
-Inputs must include:
-
-- Visible label
-- Optional description
-- Error message
-- Focus ring
-- Disabled state
-- Clear placeholder hierarchy
-
-Use 44 px minimum interactive height where practical.
-
-### Cards
-
-Card styles:
-
-- Standard bordered card
-- Elevated card
-- Soft-highlight card
-- Metric card
-- Interactive card
-
-Do not nest cards unless the hierarchy is essential.
-
-### Badges
-
-Badges should be compact and readable.
-
-Vendor status mapping:
-
-| Status               | Treatment             |
-| -------------------- | --------------------- |
-| Draft                | Neutral               |
-| Pending verification | Warning               |
-| Approved             | Success               |
-| Rejected             | Danger                |
-| Suspended            | Danger/neutral strong |
-
-Inquiry status mapping:
-
-| Status      | Treatment      |
-| ----------- | -------------- |
-| New         | Primary        |
-| Viewed      | Info           |
-| Contacted   | Violet soft    |
-| In progress | Warning        |
-| Resolved    | Success        |
-| Closed      | Neutral        |
-| Withdrawn   | Neutral strong |
-
-Never use color alone.
-
-### Dialogs
-
-Dialogs must include:
-
-- Title
-- Description
-- Clear primary action
-- Clear cancel action
-- Focus trap
-- Escape support where safe
-- Loading state
-- Explicit labels
-
-Use confirmation dialogs for high-impact actions.
-
-### Toasts
-
-Use toasts for short-lived confirmation or recoverable errors.
-
-Do not use a toast as the only confirmation for an irreversible action.
-
----
-
-## 8. Navigation
-
-### Public navigation
-
-Desktop header:
-
-- Setu logo
-- Home
-- Categories
-- Cities or Explore
-- How it works
-- Vendor onboarding
-- Login/account
-- Primary search action
-
-Mobile:
-
-- Compact top bar
-- Menu drawer
-- Optional bottom navigation for authenticated account areas
-
-### Vendor navigation
-
-- Overview
-- Application or profile
-- Verification status
-- Inquiries
-- Notifications
-- Logout
-
-### Admin navigation
-
-- Dashboard
-- Verifications
-- Vendors
-- Inquiries if implemented
-- Audit logs
-- System status
-- Logout
-
-Admin navigation must be visually denser than public navigation.
-
----
-
-## 9. Homepage
-
-### Hero
-
-Desktop uses a two-column layout.
-
-Left:
-
-- Trust statement
-- Strong headline
-- Supporting copy
-- Search panel
-- Popular searches
-
-Right:
-
-- Curated visual composition using category or vendor cards
-
-Mobile stacks content vertically.
-
-### Search panel
-
-Fields:
-
-- Service or category
-- City
-- Search action
-
-Use a white panel with a subtle border and shadow.
-
-### Trust strip
-
-Use 3–4 factual attributes:
-
-- Reviewed vendor applications
-- Private document handling
-- Simple discovery
-- Direct inquiries
-
-### Categories
-
-Use a responsive grid of category cards.
-
-### Cities
-
-Use compact city links or cards.
-
-### Vendor onboarding CTA
-
-Use a separate section with a soft violet background.
-
----
-
-## 10. Discovery Pages
-
-Every discovery page includes:
-
-- Breadcrumbs
-- Page title
-- Short description
-- Filters
-- Sort
-- Result count
-- Vendor cards
-- Pagination
-- Empty state
-- Error state
-
-Desktop filters may be horizontal or in a sidebar.
-
-Mobile filters use a sheet or drawer.
-
-Active filters appear as removable chips.
-
----
-
-## 11. Vendor Card
-
-Structure:
-
-1. Vendor image or initials
-2. Verified badge
-3. Business name
-4. Location
-5. Categories
-6. Description excerpt
-7. Service-area summary
-8. View profile action
-
-Interaction:
-
-- Hover elevation
-- Focus-visible ring
-- Slight 2–4 px lift
-- 150–220 ms transition
-
-Do not show unsupported ratings or prices.
-
----
-
-## 12. Vendor Profile
-
-Desktop layout:
-
-- Main content column
-- Inquiry sidebar
-
-Required sections:
-
-- Business summary
-- Verified status
-- Categories
-- Primary location
-- About
-- Service areas
-- Public contact details
-- Inquiry form
-- Verification explanation
-
-The inquiry form should remain visually distinct from vendor information.
-
----
-
-## 13. User Dashboard
-
-Dashboard shell:
-
-- Sidebar on desktop
-- Compact header and bottom navigation on mobile
-
-Suggested content:
-
-- Welcome header
-- Inquiry metrics
-- Recent inquiries
-- Unread notifications
-- Recent messages
-
-Only display real data.
-
----
-
-## 14. Inquiry and Messaging UI
-
-### Inquiry list
-
-Use a responsive table on desktop and cards on mobile.
-
-Show:
-
-- Vendor name
-- Subject
-- Reference number
-- Status
-- Last activity
-- Unread state
-
-### Inquiry detail
-
-Show:
-
-- Header
-- Status
-- Service details
-- Timeline
-- Messages
-- Composer
-- Available actions
-
-### Messages
-
-User and vendor messages must be visually distinct, but not only through color.
-
-Use:
-
-- Sender label
-- Alignment
-- Timestamp
-- Safe line wrapping
-
-System messages use a neutral centered treatment.
-
----
-
-## 15. Vendor Onboarding
-
-Use a five-step wizard:
-
-1. Business details
-2. Categories
-3. Service areas
-4. Documents
-5. Review and submit
-
-The wizard must provide:
-
-- Step progress
-- Current step
-- Back and continue
-- Save state
-- Field errors
-- Error summary
-- Mobile layout
-
-Document upload includes drag-and-drop, file picker, progress, status, retry, remove, and replace.
-
----
-
-## 16. Vendor Dashboard
-
-Pending vendors see:
-
-- Current verification status
-- Submission date
-- Application summary
-- Next-step explanation
-
-Approved vendors see:
-
-- New inquiries
-- Active inquiries
-- Resolved inquiries
-- Recent activity
-- Notifications
-
-Suspended vendors see a neutral restricted-state message without internal reasons.
-
----
-
-## 17. Admin UI
-
-Admin UI uses the same typography and tokens but a more operational layout.
-
-### Login and 2FA
-
-- Focused centered form
-- Minimal distractions
-- Secure language
-- Clear errors
-- Recovery-code alternative
-
-### Dashboard
-
-Metric cards for:
-
-- Pending verifications
-- Approved vendors
-- Rejected vendors
-- Suspended vendors
-- Open inquiries
-- System status
-
-### Verification queue
-
-- Search
-- Filters
-- Sort
-- Paginated table
-- Responsive list on smaller screens
-- Review action
-
-### Vendor review
-
-- Profile summary
-- Categories
-- Service areas
-- Documents
-- Decision history
-- Approve/reject actions
-
-### Audit logs
-
-- Timestamp
-- Actor
-- Action
-- Entity
-- Request ID
-- Safe metadata
-
----
-
-## 17.5 Immersive Visual Layers
-
-The interface should gain visual richness through controlled layering rather than excessive decoration.
-
-### Hero environment
-
-- Use one large soft violet glow and one secondary neutral glow.
-- Add abstract bridge or connection motifs that support the “Setu” name without resembling government symbols.
-- Compose two or three floating preview cards showing real product concepts such as a vendor card, inquiry update, or verified profile.
-- Keep foreground text on a stable high-contrast plane.
-- Use masks and gradients to fade decorative layers before they interfere with content.
-
-### Premium surfaces
-
-Use a hierarchy of surfaces:
+Card variants:
 
 ```text
-Base canvas
-Raised section
-Interactive card
-Overlay
-Focused action surface
+Raised
+Flat
+Inset
+Interactive
+Selected
+Status
 ```
 
-Interactive cards may use a very soft accent border, a pointer spotlight, and a small elevation transition. Standard form cards should remain calm and predictable.
-
-### Visual storytelling
-
-Use compact, real product previews to explain value:
-
-- Discovery preview: category, city, and approved vendors
-- Trust preview: verification state and transparent explanation
-- Inquiry preview: message and status continuity
-- Vendor preview: onboarding progress and lead inbox
-
-Do not include features that do not exist in the MVP.
-
-### Texture and gradients
-
-- Allow restrained radial gradients and low-opacity noise texture on marketing surfaces.
-- Avoid full-page gradients behind dense application content.
-- Avoid glassmorphism on forms, tables, dialogs, and document review.
-- Decorative layers must never reduce contrast or readability.
-
----
-
-## 18. Immersive Motion and Interaction System
-
-Setu should feel polished, spatial, and responsive without becoming theatrical. Motion is part of the product language and must be designed as a system.
-
-### Recommended implementation
-
-Use the existing animation stack when suitable. If no capable library exists, prefer **Motion for React** through `motion/react` for React components.
-
-Use Motion for:
-
-- Shared-layout transitions
-- Presence and exit animations
-- Spring-based interactive feedback
-- Scroll-triggered section reveals
-- Staggered list and card entrances
-- Animated drawers, dialogs, tabs, and filters
-- Number and status transitions
-
-Use CSS transitions for simple hover, focus, color, opacity, and shadow changes. Do not use JavaScript animation where CSS is sufficient.
-
-### Motion tokens
+Do not use raised shadows for every nested card. Recommended hierarchy:
 
 ```text
-Instant feedback:     80–120 ms
-Micro interaction:  120–180 ms
-Standard transition: 180–260 ms
-Overlay/dialog:      220–320 ms
-Section reveal:      320–520 ms
-Hero choreography:   500–900 ms maximum
+page background
+  raised major section
+    mostly flat/inset child content
 ```
 
-```css
---ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
---ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
---ease-exit: cubic-bezier(0.4, 0, 1, 1);
+## 15. Dashboard KPI Cards
+
+Use a compact heading, primary metric, short supporting label, miniature chart or progress indicator, and generous whitespace.
+
+Marketplace examples: active vendors, inquiries, responses, saved vendors.
+
+Insurance examples: assessment progress, available quotes, saved quotes, latest quote validity.
+
+Admin examples: pending verification, active products, provider health, failures requiring attention.
+
+## 16. Progress Rings
+
+Use for meaningful completion metrics only, such as assessment completion or onboarding completion. Use SVG, an accent gradient if appropriate, and always include numerical text.
+
+## 17. Charts
+
+Charts should be visually light: thin lines, minimal grid, subtle area fill, muted axis labels, rounded chart containers. Do not put strong neumorphic shadows around each chart element. The chart container may be raised; chart itself remains flat.
+
+## 18. Tables
+
+Admin and operations tables must prioritize readability. Use only light neumorphism: raised page container, flat table surface, soft row separators, subtle hover, status badges, clear sticky header. Do not turn every row into a floating card on desktop.
+
+## 19. Mobile Lists
+
+Convert dense tables into stacked soft cards on narrow screens. Each row card should expose primary identity, status, key metadata, primary action, and overflow action menu.
+
+## 20. Modal and Drawer
+
+Use a soft raised surface with a low-opacity dark backdrop and optional subtle blur. Modal should have a strong contrast boundary. Do not rely solely on shadows to distinguish it.
+
+## 21. Status Badges
+
+Use pill badges with soft tinted backgrounds for Approved, Pending, Active, Expired, Failed, In progress, Healthy, Degraded, etc. Text contrast must remain accessible.
+
+## 22. Notifications
+
+Use compact raised notification cards. Unread items may use a small accent marker and slightly stronger elevation. Read items should appear flatter. Do not over-animate notification lists.
+
+## 23. Public Marketplace
+
+Apply neumorphism selectively.
+
+### Homepage
+
+Use a soft hero search panel, raised category cards, layered vendor highlights, smooth pale background, and subtle accent gradients. Avoid making every marketing section a raised container.
+
+### Vendor Cards
+
+Use soft elevation, business name, verification, category, city, short description, and action. Hover should translateY(-2px), not use strong 3D tilt.
+
+## 24. Search
+
+Public search should become one of the key neumorphic components. Use a large inset search field plus raised search/filter buttons. Selected filters may use small pressed pills.
+
+## 25. Vendor Profile
+
+Use a raised identity/header card, flatter detail sections, inset or outlined info groups, and a strong inquiry CTA. Avoid excessive card nesting.
+
+## 26. Vendor Dashboard
+
+Use a light sidebar, greeting/header, KPI cards, lead list, message/activity feed, and status metrics. Cards may have stronger neumorphism than public discovery.
+
+## 27. Vendor Onboarding
+
+Use a raised central form card, inset inputs, soft progress bar, pressed active step, and clear primary CTA. Avoid heavy shadows on long forms.
+
+## 28. Insurance Landing
+
+Use the same system with a slightly more refined and trustworthy tone. Hero may feature layered insurance quote cards, subtle blue-violet gradient orb, policy selection tiles, and smooth floating surfaces. Avoid clichéd shields everywhere.
+
+## 29. Insurance Need Assessment
+
+Use a raised main wizard panel, flat or lightly inset form sections, pressed selection controls, soft progress indicator, and sticky navigation on desktop where appropriate.
+
+Selection cards use raised default and pressed/selected state with accent check.
+
+## 30. Quote Generation
+
+Use a calm processing card and show only real progress, for example `3 of 5 products evaluated`. Use a progress ring, softly animated dots, or staged result cards only when results actually arrive.
+
+## 31. Quote Cards
+
+Use raised neumorphic quote cards with insurer, product, premium, cover, waiting period, deductible, key coverage, compare, save, and details. Selected comparison cards should have an accent outline, slightly pressed surface, and check icon. Do not use glowing neon cards.
+
+## 32. Quote Comparison
+
+Desktop: large raised comparison container with a mostly flat table and sticky insurer/product headers. Mobile: stacked comparison cards. Neumorphism should not reduce data density or comparison clarity.
+
+## 33. Saved Quotes
+
+Use soft cards grouped into Current and Expired. Expired cards should be visually quieter.
+
+## 34. Handoff
+
+Confirmation card should look secure and deliberate. Use insurer identity, selected quote summary, disclosure/consent section, strong primary CTA, and restrained external-link icon.
+
+## 35. Admin
+
+Admin should use restrained neumorphism. Prioritize operational density. Use light raised summary panels, flat data tables, subtle status cards, inset search/filter controls, and minimal decorative shadows.
+
+## 36. Insurance Operations
+
+Operations dashboard should be slightly flatter than customer dashboards. Use shadows to define top-level metric cards, incident panel, and provider-health panel. Inside use compact rows, tables, timeline, and alerts. Critical state should use semantic color, not just stronger shadow.
+
+## 37. Mobile Navigation
+
+Use a raised pill-like bottom nav where appropriate. Only add a central floating action where a truly primary action exists. Do not force this pattern onto every page.
+
+## 38. Motion
+
+Use Motion for React:
+
+```ts
+import { motion, AnimatePresence } from "motion/react";
 ```
 
-Recommended spring profiles:
+Motion remains subtle.
+
+## 39. Motion Tokens
+
+```ts
+export const motionDurations = {
+  fast: 0.16,
+  normal: 0.24,
+  slow: 0.34,
+};
+
+export const motionSpring = {
+  type: "spring",
+  stiffness: 320,
+  damping: 30,
+};
+```
+
+## 40. Card Motion
+
+Interactive card hover:
+
+```ts
+whileHover={{ y: -2 }}
+```
+
+Tap:
+
+```ts
+whileTap={{ scale: 0.985 }}
+```
+
+Do not animate large rotations.
+
+## 41. Neumorphic Press Motion
+
+When selection is pressed, move from raised to slightly inset using CSS shadow transition plus a small scale. Duration 120–180ms.
+
+## 42. Page Motion
+
+Main content may use opacity 0→1 and y 10→0. Do not animate every nested component.
+
+## 43. Dashboard Stagger
+
+KPI cards may enter with a 40–60ms stagger on initial render only. Do not replay on every filter change.
+
+## 44. Reduced Motion
+
+Respect `prefers-reduced-motion`. Disable parallax, large transforms, stagger, and continuous floating. Use simple opacity transitions only where needed.
+
+## 45. Focus and Accessibility
+
+Pure neumorphism often has poor contrast. Setu must not repeat that weakness.
+
+Mandatory: explicit focus rings, sufficient text contrast, visible input boundaries, state labels, error text, icons with text where meaning is critical, and WCAG 2.1 AA target where practical.
+
+Never use shadow alone to communicate selected, disabled, error, focused, or success.
+
+## 46. Dark Mode
+
+Do not automatically implement dark neumorphism unless explicitly required. If dark mode already exists, preserve functionality and adapt carefully with accessible dark surfaces.
+
+## 47. Performance
+
+Avoid extremely large blur radii, dozens of layered box shadows, animated box shadows across large lists, heavy backdrop-filter use, and large continuous CSS filters. Use neumorphic effects on meaningful containers only.
+
+## 48. Responsive Breakpoints
+
+Validate 320, 375, 430, 768, 1024, 1280, and 1440+. No horizontal overflow. Neumorphic shadows must not cause clipping.
+
+## 49. Component Library
+
+Create or refine reusable components:
 
 ```text
-Tactile:  stiffness 420, damping 30, mass 0.7
-Layout:   stiffness 300, damping 32, mass 0.9
-Gentle:   stiffness 180, damping 24, mass 1.0
+NeoSurface
+NeoCard
+NeoButton
+NeoIconButton
+NeoInput
+NeoSelect
+NeoTextarea
+NeoSearch
+NeoBadge
+NeoProgressRing
+NeoMetricCard
+NeoModal
+NeoDrawer
+NeoTabs
+NeoSegmentedControl
+NeoBottomNav
+NeoSidebar
+NeoToolbar
+NeoEmptyState
+NeoStatusPanel
 ```
 
-Treat these as starting points, not arbitrary per-component settings. Centralize them in motion utilities.
+Do not duplicate existing shared UI unnecessarily. Prefer extending existing Setu components with `variant="neomorphic"` where clean.
 
-### Immersive homepage choreography
+## 50. Shadow Variants
 
-The public homepage may use:
+Recommended API:
 
-- A soft animated violet radial glow behind the hero
-- Very slow ambient gradient movement with low opacity
-- Layered vendor-preview cards with small depth offsets
-- Pointer-responsive parallax limited to 4–8 px on capable desktop devices
-- A search panel that settles into place on first load
-- Staggered category-card reveal as the section enters the viewport
-- Subtle icon drift or pulse used once, not continuously
-- A search-button press transition that visually carries into results
+```ts
+type NeoElevation =
+  | "flat"
+  | "raised-sm"
+  | "raised"
+  | "raised-lg"
+  | "inset";
+```
 
-The hero must remain fully understandable and usable when animation is disabled.
+Centralize mapping.
 
-### Spatial depth
+## 51. Interaction States
 
-Create depth using restrained combinations of:
+Every interactive component should define default, hover, focus-visible, active, selected, disabled, loading, and error.
 
-- Overlapping surfaces
-- Soft blurred background shapes
-- Border contrast
-- Small elevation changes
-- Scale changes of approximately 0.98–1.02
-- Pointer spotlight effects on premium cards
-- Foreground/background motion at different speeds
+## 52. Skeletons
 
-Do not use aggressive 3D rotation. Card tilt should stay below approximately 1.5 degrees and must be disabled on touch devices and reduced-motion settings.
+Use low-contrast soft skeletons. Do not use aggressive shimmer. Respect reduced motion.
 
-### Shared-layout transitions
+## 53. Empty States
 
-Use shared element or layout animations where they improve continuity:
+Use minimal iconography and a raised container only where appropriate. Examples: no inquiries, no quotes, no saved vendors, no saved quotes, no provider incidents.
 
-- Selected category chip into active filter chip
-- Vendor card image or identity block into vendor profile header
-- Inquiry list item into inquiry detail header
-- Notification item removal after mark-read
-- Onboarding step indicator progression
-- Mobile filter trigger into filter drawer
+## 54. Implementation Rule
 
-Do not block navigation waiting for animation. The route and data state remain authoritative.
+Neumorphism is a **surface treatment**, not an excuse to redesign information architecture unnecessarily.
 
-### Component microinteractions
+Preserve navigation logic, routing, form behavior, accessibility, domain states, permissions, and APIs.
 
-#### Buttons
+## 55. Design QA Checklist
 
-- Hover: slight elevation or background shift
-- Press: scale to approximately `0.98`
-- Loading: transition label into spinner without changing width
-- Success where appropriate: brief icon confirmation, then settle
-
-#### Cards
-
-- Hover: translate upward by 2–4 px with border and shadow refinement
-- Focus-visible: equivalent non-pointer emphasis
-- Optional desktop spotlight follows pointer with very low-opacity radial highlight
-- Never make operational admin rows float dramatically
-
-#### Inputs and selects
-
-- Smooth focus-ring appearance
-- Label and helper-state transitions
-- Search suggestions enter with staggered opacity and vertical movement
-- Validation error appears without shaking the entire form
-
-A short horizontal nudge may be used only for a failed one-time confirmation action, never repeatedly.
-
-#### Tabs and filters
-
-- Shared animated active indicator
-- Filter chips animate addition and removal
-- Result count crossfades or increments smoothly
-- Filter drawer uses opacity plus short-axis movement
-
-#### Dialogs, drawers, and menus
-
-- Backdrop fades independently
-- Surface enters with scale plus opacity, or slides from its physical edge
-- Exit animations are shorter than entry animations
-- Focus management must not wait for animation completion
-
-#### Toasts and notifications
-
-- Enter from the nearest viewport edge
-- Stack changes animate smoothly
-- Auto-dismiss progress must not be the only time indicator
-- Mark-read transitions reduce emphasis without removing context abruptly
-
-#### Messaging
-
-- New message enters with subtle opacity and vertical offset
-- Sending state shows locally without pretending delivery confirmation
-- Status and system messages use a restrained timeline transition
-- Do not animate the full conversation on every refetch
-
-#### Dashboards
-
-- Metric values may animate from their previous displayed value
-- Skeletons crossfade into content
-- Charts are outside MVP unless real and useful
-- Table sorting should animate row reordering only when it remains legible
-
-### Scroll-based reveals
-
-Use viewport reveals selectively:
-
-- Animate each major marketing section once
-- Prefer opacity plus 12–24 px vertical movement
-- Stagger child cards by 40–80 ms
-- Trigger before the content reaches the center of the viewport
-- Never hide essential content solely until JavaScript executes
-
-Avoid scroll hijacking, pinned storytelling, and long parallax sequences.
-
-### Route and page transitions
-
-Use restrained route continuity:
-
-- Crossfade main content or animate a small page-header region
-- Preserve scroll and focus behavior correctly
-- Avoid animating the entire application shell on every route
-- Use loading skeletons for data latency rather than long exit transitions
-
-### Ambient animation limits
-
-Continuous animation is permitted only for subtle decorative layers.
-
-Rules:
-
-- Maximum two continuously animated ambient elements per viewport
-- Minimum cycle duration approximately 8 seconds
-- Low opacity and low travel distance
-- Pause or simplify when offscreen
-- Avoid continuous animation in admin operational pages
-- Avoid high-frequency blur, large filters, or expensive box-shadow animation
-
-### Performance requirements
-
-- Animate `transform` and `opacity` whenever possible
-- Avoid layout-thrashing properties such as width, height, top, and left for frequent animation
-- Avoid animating large blurred surfaces on low-power mobile devices
-- Lazy-load motion-heavy visual modules
-- Keep animation code out of server components unless a client boundary is needed
-- Do not convert entire pages into client components solely for animation
-- Target smooth interaction on mid-range mobile devices
-- Use `will-change` sparingly and remove it after animation where practical
-
-### Reduced motion
-
-Respect `prefers-reduced-motion` and Motion's reduced-motion hooks.
-
-When reduced motion is enabled:
-
-- Remove parallax, tilt, continuous ambient movement, and large translations
-- Replace shared-layout motion with immediate state changes or short opacity fades
-- Keep focus, success, loading, and state feedback visible
-- Do not remove information or interaction affordances
-
-### Prohibited motion patterns
-
-Avoid:
-
-- Scroll hijacking
-- Autoplay video backgrounds
-- Cursor replacement
-- Excessive 3D card tilt
-- Repeated bouncing
-- Large page entrance animations on every navigation
-- Animation that blocks input
-- Decorative status pulsing
-- Constant motion in tables or admin queues
-- Animating every element simultaneously
-- Fake progress or fake real-time activity
-
-## 19. Responsive Rules
-
-Target widths:
+For every major page verify:
 
 ```text
-Mobile:   320–767 px
-Tablet:   768–1023 px
-Desktop:  1024–1439 px
-Wide:     1440 px and above
+Visual hierarchy
+Surface hierarchy
+Contrast
+Focus
+Hover
+Pressed state
+Error state
+Loading
+Empty
+Responsive
+Reduced motion
+Keyboard access
+Screen-reader labels
+Shadow clipping
+Performance
 ```
 
-Rules:
+## 56. Final Quality Bar
 
-- No unintended horizontal overflow
-- Search panel stacks on mobile
-- Cards become one column where needed
-- Filters become drawers
-- Tables become cards or responsive lists
-- Dialogs remain inside viewport
-- Message composer remains accessible
-- Mobile navigation does not cover content
-- Admin remains usable on tablets
+The final Setu interface should resemble the reference in these qualities: large soft panels, elegant white/gray canvas, blue-violet accent, rounded dashboard cards, inset search and input areas, soft floating action buttons, polished desktop/mobile consistency, tactile interaction states, clear typography, strong whitespace, and restrained chart styling.
 
----
-
-## 20. Loading States
-
-Use skeletons matching expected content.
-
-Examples:
-
-- Vendor card skeleton
-- Search result skeleton
-- Dashboard metric skeleton
-- Table-row skeleton
-- Message skeleton
-- Profile-section skeleton
-
-Use localized spinners for actions.
-
-Avoid full-screen spinners unless the entire application is blocked.
-
----
-
-## 21. Empty States
-
-Required empty states:
-
-- No categories
-- No cities
-- No vendors
-- No inquiries
-- No leads
-- No notifications
-- No verification applications
-- No audit logs
-
-Each state should include:
-
-- Clear title
-- Short explanation
-- Useful next action where appropriate
-
----
-
-## 22. Error States
-
-Support:
-
-- Validation errors
-- Network errors
-- Unauthorized
-- Forbidden
-- Not found
-- Conflict
-- Rate limited
-- Dependency unavailable
-- Unexpected error
-
-Do not expose raw backend errors or stack traces.
-
-Use request IDs in operational errors where available.
-
----
-
-## 23. Accessibility
-
-Target WCAG 2.1 AA behavior where practical.
-
-Requirements:
-
-- Semantic landmarks
-- Logical heading hierarchy
-- Visible labels
-- Error associations
-- Keyboard navigation
-- Focus-visible styles
-- Accessible dialogs
-- Accessible menus
-- Accessible tabs
-- Accessible pagination
-- Accessible file upload
-- Screen-reader announcements
-- Suitable contrast
-- Non-color status indicators
-- Touch-friendly controls
-- Reduced-motion support
-
-Automated checks do not replace manual testing.
-
----
-
-## 24. Content Standards
-
-Use consistent terminology:
-
-- Vendor
-- Inquiry
-- Verification
-- Approved
-- Pending verification
-- Rejected
-- Suspended
-
-Avoid unsupported claims:
-
-- Best vendor
-- Guaranteed
-- Government approved
-- 100% safe
-- Fully verified
-- Lowest price
-
-Use neutral, factual microcopy.
-
----
-
-## 25. Privacy and Security
-
-- Do not include private data in metadata.
-- Do not cache authenticated pages publicly.
-- Do not expose signed document URLs in persistent state.
-- Do not render messages or audit metadata as raw HTML.
-- Clear sensitive client state on logout.
-- Keep admin and public authentication isolated.
-- Keep the admin application `noindex` and disallowed from crawling.
-
----
-
-## 26. Quality Checklist
-
-Before considering the UI complete:
-
-- [ ] Public header is responsive
-- [ ] Homepage feels complete
-- [ ] Search is clear and usable
-- [ ] Vendor cards are consistent
-- [ ] Vendor profile is polished
-- [ ] Inquiry form is usable
-- [ ] User dashboard is coherent
-- [ ] Messaging is mobile-friendly
-- [ ] Vendor onboarding is clear
-- [ ] Vendor dashboard reflects vendor status
-- [ ] Admin login and 2FA are refined
-- [ ] Verification queue is efficient
-- [ ] Vendor review actions are safe
-- [ ] Audit logs are readable
-- [ ] Loading states exist
-- [ ] Empty states exist
-- [ ] Error states exist
-- [ ] Motion respects reduced-motion settings
-- [ ] Core flows are keyboard accessible
-- [ ] No fake data is presented as real
-- [ ] Public and admin builds remain separate
-
----
-
-## 27. Reference Implementation Priorities
-
-Implement in this order:
-
-1. Design tokens
-2. Shared components
-3. Public application shell
-4. Homepage
-5. Discovery pages
-6. Vendor profile
-7. Authentication
-8. User inquiry experience
-9. Vendor onboarding
-10. Vendor dashboard and leads
-11. Admin authentication
-12. Admin operational screens
-13. Motion refinement
-14. Responsive refinement
-15. Accessibility fixes
-16. Tests and documentation
+But it must improve on typical neumorphism by ensuring accessible contrast, explicit borders/focus rings where necessary, clear state communication, flatter operational data tables, stronger readability, production performance, and reduced-motion support.

@@ -41,4 +41,62 @@ describe("validateApiEnv", () => {
       }),
     ).toThrow("local object storage is not allowed");
   });
+
+  it("fails closed for insurance administration by default", () => {
+    const env = validateApiEnv(validEnv);
+    expect(env.INSURANCE_FEATURE_ENABLED).toBe(false);
+    expect(env.INSURANCE_ADMIN_ENABLED).toBe(false);
+    expect(env.INSURANCE_PRODUCT_CATALOG_ENABLED).toBe(false);
+  });
+
+  it("requires explicit provider hosts when integrations are enabled", () => {
+    expect(() =>
+      validateApiEnv({
+        ...validEnv,
+        NODE_ENV: "production",
+        CORS_ALLOWED_ORIGINS: "https://setu.example",
+        JWT_ACCESS_SECRET: "production-access-secret-1234567890",
+        JWT_REFRESH_SECRET: "production-refresh-secret-1234567890",
+        ADMIN_AUTH_CHALLENGE_SECRET: "production-challenge-secret-1234567890",
+        ADMIN_2FA_ENCRYPTION_KEY:
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        OBJECT_STORAGE_PROVIDER: "s3",
+        OBJECT_STORAGE_BUCKET: "setu-private",
+        OBJECT_STORAGE_ENDPOINT: "https://s3.example",
+        OBJECT_STORAGE_REGION: "ap-south-1",
+        OBJECT_STORAGE_ACCESS_KEY_ID: "production-access-key",
+        OBJECT_STORAGE_SECRET_ACCESS_KEY: "production-secret-key",
+        INSURANCE_PROVIDER_INTEGRATIONS_ENABLED: "true",
+      }),
+    ).toThrow("must list approved provider hosts");
+  });
+
+  it("requires an explicit approval gate for production insurance features", () => {
+    const productionEnv = {
+      ...validEnv,
+      NODE_ENV: "production",
+      CORS_ALLOWED_ORIGINS: "https://setu.example",
+      JWT_ACCESS_SECRET: "production-access-secret-1234567890",
+      JWT_REFRESH_SECRET: "production-refresh-secret-1234567890",
+      ADMIN_AUTH_CHALLENGE_SECRET: "production-challenge-secret-1234567890",
+      ADMIN_2FA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      OBJECT_STORAGE_PROVIDER: "s3",
+      OBJECT_STORAGE_BUCKET: "setu-private",
+      OBJECT_STORAGE_ENDPOINT: "https://s3.example",
+      OBJECT_STORAGE_REGION: "ap-south-1",
+      OBJECT_STORAGE_ACCESS_KEY_ID: "production-access-key",
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: "production-secret-key",
+      INSURANCE_FEATURE_ENABLED: "true",
+    };
+
+    expect(() => validateApiEnv(productionEnv)).toThrow(
+      "must be true before enabling insurance features",
+    );
+    expect(
+      validateApiEnv({
+        ...productionEnv,
+        INSURANCE_PRODUCTION_APPROVED: "true",
+      }).INSURANCE_FEATURE_ENABLED,
+    ).toBe(true);
+  });
 });

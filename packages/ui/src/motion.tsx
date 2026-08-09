@@ -11,6 +11,24 @@ import {
 
 import { cx } from "./primitives";
 
+export const durations = {
+  instant: 0.1,
+  fast: 0.16,
+  normal: 0.24,
+  slow: 0.36,
+} as const;
+
+export const easings = {
+  standard: [0.2, 0.8, 0.2, 1],
+  enter: [0.16, 1, 0.3, 1],
+  exit: [0.7, 0, 0.84, 0],
+} as const;
+
+export const springs = {
+  gentle: { stiffness: 260, damping: 26 },
+  responsive: { stiffness: 340, damping: 30 },
+} as const;
+
 export interface RevealProps extends PropsWithChildren {
   className?: string;
   delay?: number;

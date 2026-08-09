@@ -10,6 +10,7 @@ import type { Response } from "express";
 
 import { EnvService } from "../env/env.service";
 import type { AuthenticatedRequest } from "../guards/authenticated-request";
+import { redactForLog } from "../logging/redaction";
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -30,9 +31,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         : "Internal server error";
 
     if (status >= 500) {
-      this.logger.error(
-        exception instanceof Error ? exception.message : String(exception),
-      );
+      this.logger.error(JSON.stringify(redactForLog(exception)));
     }
 
     const safeMessage =

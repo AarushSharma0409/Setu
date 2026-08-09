@@ -113,6 +113,155 @@ const envSchema = z
       .enum(["true", "false"])
       .default("false")
       .transform((value) => value === "true"),
+    INSURANCE_FEATURE_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_PRODUCTION_APPROVED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_ADMIN_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_PRODUCT_CATALOG_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_CUSTOMER_NEEDS_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_QUOTATION_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_COMPARISON_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_RANKING_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_SAVED_QUOTES_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_PROVIDER_INTEGRATIONS_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_PURCHASE_HANDOFF_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_PROVIDER_DEFAULT_TIMEOUT_MS: z.coerce
+      .number()
+      .int()
+      .min(500)
+      .max(60_000)
+      .default(8_000),
+    INSURANCE_PROVIDER_MAX_RETRIES: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(3)
+      .default(1),
+    INSURANCE_PROVIDER_ALLOWED_HOSTS: z
+      .string()
+      .default("")
+      .transform((value) =>
+        value
+          .split(",")
+          .map((host) => host.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    INSURANCE_HANDOFF_TTL_MINUTES: z.coerce
+      .number()
+      .int()
+      .min(5)
+      .max(30)
+      .default(15),
+    INSURANCE_WEBHOOK_MAX_BODY_BYTES: z.coerce
+      .number()
+      .int()
+      .min(1_024)
+      .max(1_048_576)
+      .default(65_536),
+    INSURANCE_OPERATIONS_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_OPERATIONS_RETRY_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_CALLBACK_REPROCESS_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    INSURANCE_OPERATIONS_DEFAULT_WINDOW_HOURS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(720)
+      .default(24),
+    INSURANCE_EXPIRY_WARNING_DAYS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(365)
+      .default(30),
+    INSURANCE_QUOTE_TTL_DAYS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(90)
+      .default(14),
+    INSURANCE_NEED_ASSESSMENT_DRAFT_TTL_DAYS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(365)
+      .default(30),
+    INSURANCE_MAX_COVERED_MEMBERS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(10)
+      .default(6),
+    INSURANCE_SENSITIVE_DATA_ENCRYPTION_KEY: z
+      .string()
+      .min(44)
+      .default("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="),
+    INSURANCE_DOCUMENT_MAX_FILE_SIZE_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(10 * 1024 * 1024),
+    INSURANCE_DOCUMENT_ALLOWED_MIME_TYPES: z
+      .string()
+      .default("application/pdf,image/jpeg,image/png")
+      .transform((value) =>
+        value
+          .split(",")
+          .map((mimeType) => mimeType.trim())
+          .filter(Boolean),
+      ),
+    INSURANCE_SIGNED_URL_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(300)
+      .default(120),
+    INSURANCE_LICENCE_EXPIRY_WARNING_DAYS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(365)
+      .default(60),
   })
   .superRefine((values, context) => {
     if (values.NODE_ENV !== "production") return;
@@ -151,6 +300,18 @@ const envSchema = z
       });
     }
 
+    if (
+      values.INSURANCE_PROVIDER_INTEGRATIONS_ENABLED &&
+      values.INSURANCE_PROVIDER_ALLOWED_HOSTS.length === 0
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["INSURANCE_PROVIDER_ALLOWED_HOSTS"],
+        message:
+          "must list approved provider hosts when provider integrations are enabled",
+      });
+    }
+
     if (values.OBJECT_STORAGE_PROVIDER === "local") {
       context.addIssue({
         code: z.ZodIssueCode.custom,
@@ -180,6 +341,30 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ["SEED_PUBLIC_FIXTURES"],
         message: "development fixtures must be disabled in production",
+      });
+    }
+
+    const anyInsuranceFeatureEnabled =
+      values.INSURANCE_FEATURE_ENABLED ||
+      values.INSURANCE_ADMIN_ENABLED ||
+      values.INSURANCE_PRODUCT_CATALOG_ENABLED ||
+      values.INSURANCE_CUSTOMER_NEEDS_ENABLED ||
+      values.INSURANCE_QUOTATION_ENABLED ||
+      values.INSURANCE_COMPARISON_ENABLED ||
+      values.INSURANCE_RANKING_ENABLED ||
+      values.INSURANCE_SAVED_QUOTES_ENABLED ||
+      values.INSURANCE_PROVIDER_INTEGRATIONS_ENABLED ||
+      values.INSURANCE_PURCHASE_HANDOFF_ENABLED ||
+      values.INSURANCE_OPERATIONS_ENABLED ||
+      values.INSURANCE_OPERATIONS_RETRY_ENABLED ||
+      values.INSURANCE_CALLBACK_REPROCESS_ENABLED;
+
+    if (anyInsuranceFeatureEnabled && !values.INSURANCE_PRODUCTION_APPROVED) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["INSURANCE_PRODUCTION_APPROVED"],
+        message:
+          "must be true before enabling insurance features in production",
       });
     }
   });

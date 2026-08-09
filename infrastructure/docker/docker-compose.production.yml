@@ -34,19 +34,33 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
     expose: ["4000"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/api/v1/health/live').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   web:
     image: ${SETU_WEB_IMAGE:-setu-web:latest}
     restart: unless-stopped
     env_file: ["${SETU_WEB_ENV_FILE:?set a web env file path}"]
-    depends_on: [api]
+    depends_on:
+      api: { condition: service_healthy }
     ports: ["${WEB_PORT:-3000}:3000"]
 
   admin:
     image: ${SETU_ADMIN_IMAGE:-setu-admin:latest}
     restart: unless-stopped
     env_file: ["${SETU_ADMIN_ENV_FILE:?set an admin env file path}"]
-    depends_on: [api]
+    depends_on:
+      api: { condition: service_healthy }
     ports: ["${ADMIN_PORT:-3001}:3001"]
 
 volumes:

@@ -16,6 +16,7 @@ import { RequestLoggingInterceptor } from "../common/interceptors/request-loggin
 import { DatabaseModule } from "../database/database.module";
 import { HealthModule } from "../health/health.module";
 import { InquiriesModule } from "../inquiries/inquiries.module";
+import { InsuranceModule } from "../insurance/insurance.module";
 import { LocationsModule } from "../locations/locations.module";
 import { NotificationsModule } from "../notifications/notifications.module";
 import { PublicDiscoveryModule } from "../public-discovery/public-discovery.module";
@@ -41,6 +42,7 @@ import { VendorsModule } from "../vendors/vendors.module";
     PublicDiscoveryModule,
     InquiriesModule,
     NotificationsModule,
+    InsuranceModule,
   ],
   controllers: [AppController, AdminSystemController],
   providers: [

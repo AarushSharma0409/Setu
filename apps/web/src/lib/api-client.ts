@@ -36,6 +36,45 @@ export interface PublicUser {
   status: string;
 }
 
+export interface InsuranceQuestionOption {
+  id: string;
+  label: string;
+  value: string;
+}
+
+export interface InsuranceQuestion {
+  id: string;
+  key: string;
+  label: string;
+  description: string | null;
+  fieldType: string;
+  isRequired: boolean;
+  dataClassification: string;
+  validationConfig: unknown;
+  visibilityConfig: unknown;
+  options: InsuranceQuestionOption[];
+}
+
+export interface InsuranceAssessmentSection {
+  id: string;
+  key: string;
+  title: string;
+  description: string | null;
+  questions: InsuranceQuestion[];
+}
+
+export interface InsuranceAssessmentSummary {
+  id: string;
+  referenceNumber: string;
+  status: string;
+  completionPercentage: number;
+  currentSectionKey: string | null;
+  lastSavedAt: string;
+  submittedAt: string | null;
+  version: number;
+  policyType?: { id: string; name: string; slug: string };
+}
+
 interface DevLoginInput {
   email?: string;
   phone?: string;
@@ -52,6 +91,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...init.headers,
     },
     ...init,
+    cache: path.startsWith("/insurance/") ? "no-store" : init.cache,
   });
 
   if (!response.ok) {
@@ -76,6 +116,270 @@ async function readJson<T>(response: Response): Promise<T | null> {
 }
 
 export const publicApi = {
+  insurancePolicyTypes: () =>
+    request<{
+      items: Array<{
+        id: string;
+        code: string;
+        name: string;
+        slug: string;
+        description: string | null;
+      }>;
+    }>("/insurance/policy-types"),
+  insuranceAssessments: (accessToken: string) =>
+    request<{
+      items: Array<{
+        id: string;
+        referenceNumber: string;
+        status: string;
+        completionPercentage: number;
+        policyType: { name: string; slug: string };
+      }>;
+    }>("/insurance/needs/assessments", { headers: authHeaders(accessToken) }),
+  createInsuranceAssessment: (
+    accessToken: string,
+    policyTypeId: string,
+    abandonExisting = false,
+  ) =>
+    request<{ id: string; referenceNumber: string }>(
+      "/insurance/needs/assessments",
+      {
+        method: "POST",
+        body: JSON.stringify({ policyTypeId, abandonExisting }),
+        headers: authHeaders(accessToken),
+      },
+    ),
+  insuranceAssessment: (accessToken: string, assessmentId: string) =>
+    request<
+      InsuranceAssessmentSummary & {
+        answers: Array<{
+          questionId: string;
+          questionKey: string;
+          dataClassification: string;
+          value: unknown;
+        }>;
+      }
+    >(`/insurance/needs/assessments/${encodeURIComponent(assessmentId)}`, {
+      headers: authHeaders(accessToken),
+    }),
+  insuranceAssessmentSchema: (accessToken: string, assessmentId: string) =>
+    request<{
+      assessment: InsuranceAssessmentSummary;
+      schema: { sections: InsuranceAssessmentSection[] };
+    }>(
+      `/insurance/needs/assessments/${encodeURIComponent(assessmentId)}/schema`,
+      {
+        headers: authHeaders(accessToken),
+      },
+    ),
+  saveInsuranceAssessmentAnswers: (
+    accessToken: string,
+    assessmentId: string,
+    input: {
+      sectionKey: string;
+      version: number;
+      answers: Array<{ questionId: string; value: unknown }>;
+    },
+  ) =>
+    request<{
+      assessment: InsuranceAssessmentSummary;
+      completionPercentage: number;
+      missingRequiredQuestions: string[];
+    }>(
+      `/insurance/needs/assessments/${encodeURIComponent(assessmentId)}/answers`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(input),
+        headers: authHeaders(accessToken),
+      },
+    ),
+  insuranceAssessmentReview: (accessToken: string, assessmentId: string) =>
+    request<{
+      assessment: InsuranceAssessmentSummary & {
+        answers: Array<{ questionKey: string; value: unknown }>;
+      };
+      completion: {
+        completionPercentage: number;
+        missingRequiredQuestions: string[];
+      };
+      disclosures: {
+        items: Array<{
+          id: string;
+          name: string;
+          content: string;
+          version: number;
+          requiresAcknowledgement: boolean;
+          acknowledgedAt: string | null;
+        }>;
+      };
+      consents: {
+        items: Array<{
+          id: string;
+          name: string;
+          content: string;
+          description: string | null;
+          version: number;
+          purpose: string;
+          required: boolean;
+          record: { status: string } | null;
+        }>;
+      };
+    }>(
+      `/insurance/needs/assessments/${encodeURIComponent(assessmentId)}/review`,
+      {
+        headers: authHeaders(accessToken),
+      },
+    ),
+  acknowledgeInsuranceDisclosure: (
+    accessToken: string,
+    assessmentId: string,
+    templateId: string,
+  ) =>
+    request<Record<string, unknown>>(
+      `/insurance/needs/assessments/${encodeURIComponent(assessmentId)}/disclosures/${encodeURIComponent(templateId)}/acknowledge`,
+      { method: "POST", body: "{}", headers: authHeaders(accessToken) },
+    ),
+  grantInsuranceConsent: (
+    accessToken: string,
+    assessmentId: string,
+    templateId: string,
+  ) =>
+    request<Record<string, unknown>>(
+      `/insurance/needs/assessments/${encodeURIComponent(assessmentId)}/consents/${encodeURIComponent(templateId)}/grant`,
+      { method: "POST", body: "{}", headers: authHeaders(accessToken) },
+    ),
+  submitInsuranceAssessment: (accessToken: string, assessmentId: string) =>
+    request<{
+      assessment: InsuranceAssessmentSummary;
+      alreadySubmitted: boolean;
+    }>(
+      `/insurance/needs/assessments/${encodeURIComponent(assessmentId)}/submit`,
+      { method: "POST", body: "{}", headers: authHeaders(accessToken) },
+    ),
+  insuranceQuoteRequests: (accessToken: string) =>
+    request<{
+      items: Array<{
+        id: string;
+        referenceNumber: string;
+        status: string;
+        requestedAt: string;
+        expiresAt: string | null;
+        generatedQuoteCount: number;
+        policyType: { name: string; slug: string };
+      }>;
+    }>("/insurance/quotes", { headers: authHeaders(accessToken) }),
+  createInsuranceQuoteRequest: (
+    accessToken: string,
+    assessmentId: string,
+    idempotencyKey: string,
+  ) =>
+    request<{ referenceNumber: string; status: string }>("/insurance/quotes", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId }),
+      headers: {
+        ...authHeaders(accessToken),
+        "Idempotency-Key": idempotencyKey,
+      },
+    }),
+  insuranceComparison: (
+    accessToken: string,
+    quoteRequestId: string,
+    query = "",
+  ) =>
+    request<{
+      items: Array<{
+        quoteId: string;
+        insurer: { name: string };
+        product: { name: string };
+        premium: { currency: string; total: string } | null;
+        sumInsured: string | null;
+        deductible: string | null;
+        waitingPeriods: string | null;
+        coreCoverage: string | null;
+        exclusions: string | null;
+        addons: string | null;
+        validUntil: string | null;
+        saved: boolean;
+      }>;
+    }>(
+      `/insurance/quote-requests/${encodeURIComponent(quoteRequestId)}/comparison${query ? `?${query}` : ""}`,
+      { headers: authHeaders(accessToken) },
+    ),
+  saveInsuranceQuote: (accessToken: string, quoteId: string) =>
+    request<{ id: string }>(
+      `/insurance/quotes/${encodeURIComponent(quoteId)}/save`,
+      { method: "POST", body: "{}", headers: authHeaders(accessToken) },
+    ),
+  unsaveInsuranceQuote: (accessToken: string, quoteId: string) =>
+    request<{ ok: boolean }>(
+      `/insurance/quotes/${encodeURIComponent(quoteId)}/save`,
+      { method: "DELETE", headers: authHeaders(accessToken) },
+    ),
+  savedInsuranceQuotes: (accessToken: string) =>
+    request<{
+      items: Array<{
+        id: string;
+        savedAt: string;
+        quote: {
+          id: string;
+          status: string;
+          totalPremium: string | null;
+          currency: string | null;
+          validUntil: string | null;
+          organization: { legalName: string; tradeName: string | null };
+          productVersion: { name: string };
+        };
+      }>;
+    }>("/insurance/saved-quotes", { headers: authHeaders(accessToken) }),
+  createInsuranceHandoff: (accessToken: string, quoteId: string) =>
+    request<{
+      handoffId: string;
+      referenceNumber: string;
+      redirectUrl: string;
+      expiresAt: string;
+      providerName: string;
+    }>(`/insurance/quotes/${encodeURIComponent(quoteId)}/handoff`, {
+      method: "POST",
+      body: "{}",
+      headers: authHeaders(accessToken),
+    }),
+  recordInsuranceHandoffRedirect: (accessToken: string, handoffId: string) =>
+    request<{ ok: boolean }>(
+      `/insurance/handoffs/${encodeURIComponent(handoffId)}/redirect`,
+      { method: "POST", body: "{}", headers: authHeaders(accessToken) },
+    ),
+  insuranceHandoffReturn: (state: string) =>
+    request<{
+      referenceNumber: string;
+      providerName: string;
+      status: string;
+      expiresAt: string;
+    }>(`/insurance/handoff/return?state=${encodeURIComponent(state)}`),
+  insuranceQuoteRequest: (accessToken: string, quoteRequestId: string) =>
+    request<{
+      referenceNumber: string;
+      status: string;
+      requestedAt: string;
+      completedAt: string | null;
+      expiresAt: string | null;
+      policyType: { name: string; slug: string };
+      quotes: Array<{
+        id: string;
+        status: string;
+        currency: string | null;
+        totalPremium: string | null;
+        sumInsured: string | null;
+        validUntil: string | null;
+        organizationName: string;
+        productName: string;
+        productDescription: string;
+        coverageSummary: string | null;
+        waitingPeriodSummary: string | null;
+        exclusionSummary: string | null;
+      }>;
+    }>(`/insurance/quotes/${encodeURIComponent(quoteRequestId)}`, {
+      headers: authHeaders(accessToken),
+    }),
   health: () =>
     request<{ status: string; dependencies: Record<string, string> }>(
       "/health",

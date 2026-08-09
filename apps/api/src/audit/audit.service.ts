@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
+import { redactForLog } from "../common/logging/redaction";
 import { PrismaService } from "../database/prisma.service";
 
 export interface AuditContext {
@@ -79,44 +80,31 @@ export class AuditService {
   }
 }
 
-const SENSITIVE_KEYS = new Set([
-  "password",
-  "passwordHash",
-  "accessToken",
-  "refreshToken",
-  "challengeToken",
-  "totpSecret",
-  "recoveryCode",
-  "signedUrl",
-  "storageCredentials",
-]);
-
 export function sanitizeMetadata(value: unknown): Prisma.InputJsonValue {
-  if (value === null) {
+  const redacted = redactForLog(value);
+  if (redacted === null) {
     return {};
   }
 
   if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
+    typeof redacted === "string" ||
+    typeof redacted === "number" ||
+    typeof redacted === "boolean"
   ) {
-    return value;
+    return redacted;
   }
 
-  if (Array.isArray(value)) {
-    return value.map((item) => sanitizeMetadata(item));
+  if (Array.isArray(redacted)) {
+    return redacted.map((item) => sanitizeMetadata(item));
   }
 
-  if (typeof value === "object") {
+  if (typeof redacted === "object") {
     const result: Record<string, Prisma.InputJsonValue> = {};
-    for (const [key, item] of Object.entries(value)) {
-      if (!SENSITIVE_KEYS.has(key)) {
-        result[key] = sanitizeMetadata(item);
-      }
+    for (const [key, item] of Object.entries(redacted)) {
+      result[key] = sanitizeMetadata(item);
     }
     return result;
   }
 
-  return typeof value === "bigint" ? value.toString() : "[unserializable]";
+  return "[unserializable]";
 }

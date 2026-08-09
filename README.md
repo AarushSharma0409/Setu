@@ -352,6 +352,139 @@ Not implemented:
 - The local signed-object URI is an adapter contract for development and is not
   a public browser URL
 
+## Insurance Sprint I4: quotation foundation
+
+Sprint I4 adds customer-owned quote requests derived only from submitted need
+profile snapshots. It supports deterministic catalogue eligibility and an
+internal/manual, versioned rate-card provider; no insurer API, underwriting,
+comparison, ranking, recommendation, purchase, payment, or policy issuance is
+implemented.
+
+The quote API is disabled by default. In addition to the approved operating
+model capabilities `COLLECT_CUSTOMER_NEEDS` and `REQUEST_QUOTES`, development
+enablement requires:
+
+```text
+INSURANCE_FEATURE_ENABLED=true
+INSURANCE_QUOTATION_ENABLED=true
+INSURANCE_QUOTE_TTL_DAYS=14
+```
+
+Quote creation and recalculation require an `Idempotency-Key` header. The
+initial manual-rate-card administration endpoints are MFA and permission
+protected. See [Insurance quotation foundation](docs/insurance/quotations.md)
+for lifecycle, expiry, security, and endpoint details.
+
+## Insurance Sprint I5: comparison foundation
+
+Sprint I5 introduces private comparison, neutral sorting, saved quotes, and a
+strictly capability-gated transparent-ranking foundation. Enablement requires
+the I1 operating-model capability and the corresponding API-only flags:
+
+```text
+INSURANCE_COMPARISON_ENABLED=false
+INSURANCE_RANKING_ENABLED=false
+INSURANCE_SAVED_QUOTES_ENABLED=false
+```
+
+No comparison path recalculates premiums or uses commercial arrangements.
+See [comparison and transparent ranking](docs/insurance/comparison.md).
+
+## Insurance Sprint I6: provider integration and continuation foundation
+
+Sprint I6 adds an adapter registry, environment-scoped integration metadata,
+managed credential references, product mappings, safe health checks, secure
+customer handoff sessions, redirect tracking, and callback/conversion storage.
+No real insurer API contract or credential is included in this repository, so
+the only shipped adapter is an offline `SETU_MOCK` adapter for deterministic
+local testing. It makes no network calls and is not an insurer integration.
+
+Enablement remains fail-closed and requires both feature flags plus the active
+operating-model capability `REDIRECT_TO_PURCHASE`:
+
+```text
+INSURANCE_PROVIDER_INTEGRATIONS_ENABLED=false
+INSURANCE_PURCHASE_HANDOFF_ENABLED=false
+```
+
+See [provider integrations](docs/insurance/integrations.md) and
+[secure purchase handoff](docs/insurance/purchase-handoff.md).
+
+## Insurance Sprint I7: operations and support foundation
+
+Sprint I7 adds a separate, feature-gated operations boundary for monitoring
+insurance quotes, provider health, handoffs, callbacks, configuration warnings,
+customer-support references, and consent/disclosure evidence. It is disabled by
+default and requires the existing insurance/admin flags plus:
+
+```text
+INSURANCE_OPERATIONS_ENABLED=false
+INSURANCE_OPERATIONS_RETRY_ENABLED=false
+INSURANCE_CALLBACK_REPROCESS_ENABLED=false
+INSURANCE_OPERATIONS_DEFAULT_WINDOW_HOURS=24
+INSURANCE_EXPIRY_WARNING_DAYS=30
+```
+
+The dashboard is available at `/insurance/operations` and support lookup at
+`/insurance/support` after an authorized admin signs in. Operations uses
+MFA-backed admin sessions, explicit permissions, rate-limited support search,
+and audit records. No provider credential, raw payload, handoff state token,
+or sensitive assessment answer is exposed. See
+[insurance operations](docs/insurance/operations.md) and
+[the I7 handoff](docs/insurance/sprint-i7.md).
+
+## Insurance Sprint I1: internal foundation
+
+Insurance Sprint I1 introduces a strictly separate internal insurance domain.
+It does not reuse marketplace vendor, vendor-document, or vendor-verification
+models. It provides draft-first configuration for operating models,
+organization regulatory records and private documents, insurance lines and
+policy types, versioned disclosures and consent templates, explicit permissions,
+MFA-gated administration, configuration history, and server-side capability
+checks.
+
+No customer-facing insurance route is available. Quotations, products, premium
+calculation, comparison, ranking, recommendations, payment, purchase, policy
+issuance, claims, renewals, insurer credentials, and insurer integrations are
+out of scope.
+
+### Insurance environment and migration
+
+The following API-only flags are disabled by default:
+
+```text
+INSURANCE_FEATURE_ENABLED=false
+INSURANCE_ADMIN_ENABLED=false
+INSURANCE_DOCUMENT_MAX_FILE_SIZE_BYTES=10485760
+INSURANCE_DOCUMENT_ALLOWED_MIME_TYPES=application/pdf,image/jpeg,image/png
+INSURANCE_SIGNED_URL_TTL_SECONDS=120
+INSURANCE_LICENCE_EXPIRY_WARNING_DAYS=60
+```
+
+Insurance administration requires both feature flags, an active MFA-backed
+admin session, and an explicit insurance permission. The API fails closed if a
+flag is off. Production configuration rejects the flags, so enablement needs a
+separate controls review rather than an environment-only switch.
+
+Apply the dedicated migration after PostgreSQL is running:
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm db:seed
+```
+
+Development seeding creates only clearly labelled, fake, draft insurance
+records: an operating model, example lines, one inactive policy type, an
+example insurer and intermediary, and draft disclosure and consent templates.
+No production insurance seed exists.
+
+Protected admin URLs are under `http://localhost:3001/insurance`; they are
+dynamic and use `no-store` API requests. See
+`docs/insurance/operating-model.md`, `docs/insurance/permissions.md`,
+`docs/insurance/data-classification.md`, and
+`docs/insurance/release-readiness.md` for the operational boundary.
+
 Sprint 4 public discovery is implemented below. Next planned sprint: inquiry
 foundations while keeping billing and insurance work separate.
 
@@ -579,3 +712,19 @@ hostname. See `docs/launch-checklist.md` before classifying the MVP as ready.
 The repository does not claim completed antivirus scanning, an S3 production
 adapter, external penetration testing, load testing, browser/axe automation,
 or a completed backup/restore drill. These remain explicit release-gate tasks.
+
+## Insurance Sprint I2: product catalogue
+
+Sprint I2 introduces a private, feature-gated insurance product catalogue. It
+adds versioned insurer product configuration, coverage, eligibility,
+sum-insured choices, premium-basis metadata, waiting periods, exclusions,
+add-ons, deductibles, availability, private product documents, review, and
+withdrawal audit events. It does not add customer insurance pages, premium
+calculation, quotation, comparison, purchase, policy issuance, claims, or
+insurer integrations.
+
+Read the implementation handoff at `docs/insurance/sprint-i2.md`. Product
+catalogue endpoints additionally require `INSURANCE_PRODUCT_CATALOG_ENABLED`.
+All insurance flags default to `false`; production environment validation
+rejects enabled insurance flags until the production controls are explicitly
+revisited.

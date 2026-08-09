@@ -68,6 +68,12 @@ export function ProtectedShell({ children }: { children: ReactNode }) {
             ["/dashboard/system-status", "System status"],
             ["/dashboard/vendors", "Verification queue"],
             ["/dashboard/audit", "Audit log"],
+            ["/insurance", "Insurance"],
+            ["/insurance/products", "Product catalogue"],
+            ["/insurance/ranking", "Ranking methods"],
+            ["/insurance/integrations", "Provider integrations"],
+            ["/insurance/operations", "Insurance operations"],
+            ["/insurance/support", "Insurance support"],
           ].map(([href, label]) => (
             <Link
               className={`setu-admin-nav-link ${pathname === href || pathname.startsWith(`${href}/`) ? "setu-admin-nav-link-active" : ""}`}

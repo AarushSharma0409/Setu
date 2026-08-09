@@ -84,7 +84,7 @@ export function InquiryList({ mode }: { mode: "user" | "vendor" }) {
         <div className="mt-6 space-y-3">
           {items.map((item) => (
             <Link key={item.id} href={`${base}/${item.id}`}>
-              <Card className="hover:border-slate-400">
+              <Card className="setu-card-interactive setu-inquiry-row">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">

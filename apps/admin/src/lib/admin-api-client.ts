@@ -82,6 +82,128 @@ export interface VendorDetail {
   }>;
 }
 
+export interface InsuranceDashboard {
+  activeOperatingModel: number;
+  organizationsPendingVerification: number;
+  activeInsurers: number;
+  activeIntermediaries: number;
+  licencesExpiringSoon: number;
+  activePolicyTypes: number;
+  publishedDisclosures: number;
+  publishedConsentTemplates: number;
+}
+
+export interface InsuranceOperatingModel {
+  id: string;
+  legalEntityName: string;
+  tradeName: string | null;
+  operatingRole: string;
+  licenceNumber: string;
+  licenceAuthority: string;
+  licenceValidFrom: string;
+  licenceValidUntil: string | null;
+  countryCode: string;
+  primaryJurisdiction: string;
+  permittedInsuranceLines: string[];
+  permittedOrganizationTypes: string[];
+  permittedCapabilities: string[];
+  restrictedCapabilities: string[];
+  configurationVersion: number;
+  status: string;
+  effectiveFrom: string | null;
+  effectiveUntil: string | null;
+}
+
+export interface InsuranceOrganization {
+  id: string;
+  legalName: string;
+  tradeName: string | null;
+  type: string;
+  status: string;
+  registrationNumber: string;
+  regulatoryAuthority: string;
+  registrationValidUntil: string | null;
+  updatedAt: string;
+  insuranceLines?: Array<{ id: string; code: string; name: string }>;
+}
+
+export interface InsurancePolicyType {
+  id: string;
+  code: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: string;
+  isEnabledForMvp: boolean;
+  insuranceLine: { id: string; code: string; name: string };
+}
+
+export interface InsuranceTemplate {
+  id: string;
+  code: string;
+  name: string;
+  purpose: string;
+  status: string;
+  version: number;
+  content: string;
+  effectiveFrom: string | null;
+  effectiveUntil: string | null;
+}
+
+export interface InsuranceProductListItem {
+  id: string;
+  code: string;
+  slug: string;
+  status: string;
+  organization: { id: string; legalName: string; slug: string };
+  policyType: { id: string; code: string; name: string };
+  currentVersion: {
+    id: string;
+    versionNumber: number;
+    status: string;
+    name: string;
+    effectiveFrom: string | null;
+    effectiveUntil: string | null;
+  } | null;
+  updatedAt: string;
+}
+
+export interface InsuranceProductDetail extends InsuranceProductListItem {
+  versions: Array<{
+    id: string;
+    versionNumber: number;
+    status: string;
+    name: string;
+    effectiveFrom: string | null;
+    effectiveUntil: string | null;
+    rejectionReason: string | null;
+  }>;
+  currentVersion:
+    | (NonNullable<InsuranceProductListItem["currentVersion"]> &
+        Record<string, unknown>)
+    | null;
+  documents: Array<{
+    id: string;
+    title: string;
+    type: string;
+    status: string;
+    originalFileName: string;
+  }>;
+}
+
+export interface InsuranceIntegrationSummary {
+  id: string;
+  code: string;
+  name: string;
+  environment: string;
+  status: string;
+  authType: string;
+  healthStatus: string;
+  credentialConfigured: boolean;
+  productMappingCount?: number;
+  organization?: { legalName: string; tradeName: string | null };
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${adminEnv.NEXT_PUBLIC_API_URL}${path}`, {
     credentials: "include",
@@ -236,4 +358,207 @@ export const adminApi = {
     }>(`/admin/audit-logs${query ? `?${query}` : ""}`, {
       headers: withAuth(accessToken),
     }),
+  insuranceDashboard: (accessToken: string) =>
+    request<InsuranceDashboard>("/admin/insurance", {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceOperatingModels: (accessToken: string) =>
+    request<{ items: InsuranceOperatingModel[] }>(
+      "/admin/insurance/operating-model",
+      { cache: "no-store", headers: withAuth(accessToken) },
+    ),
+  createInsuranceOperatingModel: (
+    accessToken: string,
+    input: Record<string, unknown>,
+  ) =>
+    request<InsuranceOperatingModel>("/admin/insurance/operating-model", {
+      method: "POST",
+      headers: withAuth(accessToken),
+      body: JSON.stringify(input),
+    }),
+  activateInsuranceOperatingModel: (accessToken: string, id: string) =>
+    request<InsuranceOperatingModel>(
+      `/admin/insurance/operating-model/${id}/activate`,
+      { method: "POST", headers: withAuth(accessToken), body: "{}" },
+    ),
+  insuranceOrganizations: (accessToken: string, query = "") =>
+    request<{
+      items: InsuranceOrganization[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    }>(`/admin/insurance/organizations${query ? `?${query}` : ""}`, {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceOrganization: (accessToken: string, id: string) =>
+    request<InsuranceOrganization & Record<string, unknown>>(
+      `/admin/insurance/organizations/${id}`,
+      { cache: "no-store", headers: withAuth(accessToken) },
+    ),
+  insuranceLines: (accessToken: string) =>
+    request<{ items: Array<{ id: string; code: string; name: string }> }>(
+      "/admin/insurance/lines",
+      { cache: "no-store", headers: withAuth(accessToken) },
+    ),
+  insurancePolicyTypes: (accessToken: string) =>
+    request<{ items: InsurancePolicyType[] }>("/admin/insurance/policy-types", {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceDisclosures: (accessToken: string) =>
+    request<{
+      items: Array<
+        InsuranceTemplate & {
+          audience: string;
+          requiresAcknowledgement: boolean;
+        }
+      >;
+    }>("/admin/insurance/disclosures", {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceDisclosure: (accessToken: string, id: string) =>
+    request<
+      InsuranceTemplate & { audience: string; requiresAcknowledgement: boolean }
+    >(`/admin/insurance/disclosures/${id}`, {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceConsentTemplates: (accessToken: string) =>
+    request<{ items: InsuranceTemplate[] }>(
+      "/admin/insurance/consent-templates",
+      {
+        cache: "no-store",
+        headers: withAuth(accessToken),
+      },
+    ),
+  insuranceConsentTemplate: (accessToken: string, id: string) =>
+    request<InsuranceTemplate>(`/admin/insurance/consent-templates/${id}`, {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceProducts: (accessToken: string, query = "") =>
+    request<{
+      items: InsuranceProductListItem[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    }>(`/admin/insurance/products${query ? `?${query}` : ""}`, {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceProduct: (accessToken: string, id: string) =>
+    request<InsuranceProductDetail>(`/admin/insurance/products/${id}`, {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  createInsuranceProduct: (
+    accessToken: string,
+    input: Record<string, string>,
+  ) =>
+    request<InsuranceProductDetail>("/admin/insurance/products", {
+      method: "POST",
+      headers: withAuth(accessToken),
+      body: JSON.stringify(input),
+    }),
+  submitInsuranceProductVersion: (
+    accessToken: string,
+    productId: string,
+    versionId: string,
+  ) =>
+    request<InsuranceProductDetail>(
+      `/admin/insurance/products/${productId}/versions/${versionId}/submit`,
+      {
+        method: "POST",
+        headers: withAuth(accessToken),
+        body: "{}",
+      },
+    ),
+  approveInsuranceProductVersion: (
+    accessToken: string,
+    productId: string,
+    versionId: string,
+  ) =>
+    request<InsuranceProductDetail>(
+      `/admin/insurance/products/${productId}/versions/${versionId}/approve`,
+      {
+        method: "POST",
+        headers: withAuth(accessToken),
+        body: "{}",
+      },
+    ),
+  insuranceIntegrations: (accessToken: string) =>
+    request<{ items: InsuranceIntegrationSummary[] }>(
+      "/admin/insurance/integrations",
+      { cache: "no-store", headers: withAuth(accessToken) },
+    ),
+  insuranceIntegrationDashboard: (accessToken: string) =>
+    request<{
+      active: number;
+      sandbox: number;
+      production: number;
+      healthy: number;
+      degraded: number;
+      unavailable: number;
+      requestsLast24Hours: number;
+      failuresLast24Hours: number;
+      handoffsCreatedLast24Hours: number;
+      callbacksAwaitingProcessing: number;
+    }>("/admin/insurance/integrations/dashboard", {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  testInsuranceIntegration: (accessToken: string, id: string) =>
+    request<{ status: string; checkedAt: string; summary: string }>(
+      `/admin/insurance/integrations/${id}/health`,
+      { headers: withAuth(accessToken) },
+    ),
+  insuranceOperationsSummary: (accessToken: string, query = "") =>
+    request<{
+      quoteRequests: number;
+      completedQuotes: number;
+      partialQuotes: number;
+      failedQuotes: number;
+      activeProviders: number;
+      degradedProviders: number;
+      unavailableProviders: number;
+      handoffsCreated: number;
+      handoffFailures: number;
+      callbacksPending: number;
+      callbacksFailed: number;
+      warnings: Array<{ code: string; severity: string; count: number }>;
+    }>(`/admin/insurance/operations/summary${query ? `?${query}` : ""}`, {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceOperationsList: (
+    accessToken: string,
+    resource: "quotes" | "providers" | "callbacks" | "handoffs",
+    query = "",
+  ) =>
+    request<{
+      items: Array<Record<string, unknown>>;
+      meta: Record<string, number>;
+    }>(`/admin/insurance/operations/${resource}${query ? `?${query}` : ""}`, {
+      cache: "no-store",
+      headers: withAuth(accessToken),
+    }),
+  insuranceOperationsDetail: (
+    accessToken: string,
+    resource: "quotes" | "providers" | "callbacks" | "handoffs",
+    id: string,
+  ) =>
+    request<Record<string, unknown>>(
+      `/admin/insurance/operations/${resource}/${id}`,
+      { cache: "no-store", headers: withAuth(accessToken) },
+    ),
+  insuranceSupportSearch: (accessToken: string, query: string) =>
+    request<Record<string, unknown>>(
+      `/admin/insurance/operations/support/search?${query}`,
+      { cache: "no-store", headers: withAuth(accessToken) },
+    ),
 };

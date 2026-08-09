@@ -68,7 +68,7 @@ export default async function VendorPage({ params }: Props) {
               <a href="#services">Services</a>
               <a href="#areas">Service areas</a>
             </nav>
-            <Card className="mt-6" id="overview">
+            <Card className="mt-6 setu-profile-about" elevation="raised">
               <h2 className="text-xl font-semibold">About this provider</h2>
               <p className="mt-3 whitespace-pre-line leading-7 text-slate-700">
                 {vendor.description}
@@ -79,10 +79,7 @@ export default async function VendorPage({ params }: Props) {
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {vendor.categories.map((category) => (
-                <span
-                  key={category.slug}
-                  className="rounded bg-slate-100 px-3 py-1 text-sm"
-                >
+                <span key={category.slug} className="setu-profile-tag">
                   {category.name}
                 </span>
               ))}
@@ -94,7 +91,7 @@ export default async function VendorPage({ params }: Props) {
               {vendor.serviceAreas.map((city) => (
                 <li
                   key={`${city.stateCode}-${city.slug}`}
-                  className="rounded border px-3 py-1"
+                  className="setu-profile-area"
                 >
                   {city.name}, {city.stateName}
                 </li>

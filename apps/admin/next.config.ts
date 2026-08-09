@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
 
     return [
       {
+        source: "/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
