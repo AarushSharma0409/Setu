@@ -11,17 +11,19 @@ permission-checked vendor review, private document access, transactional
 approval/rejection/suspension decisions, and append-only audit logs.
 
 Public discovery, approved vendor profiles, vendor onboarding, verification,
-inquiries, messaging, and in-app notifications are implemented in the
-controlled non-insurance MVP. Reviews, subscriptions, billing, insurance,
-production object-storage integration, and other excluded product features
-remain intentionally out of scope.
+inquiries, messaging, and in-app notifications are implemented in the MVP.
+Finance and insurance use the same discovery/referral flow: users browse an
+approved provider and contact that provider directly. Setu does not sell,
+compare, price, quote, recommend, purchase, issue, or service those products.
+Vendor-upload malware scanning is integrated through ClamAV and is required in
+production.
 
 ## Architecture summary
 
-- `apps/web`: public Next.js App Router application at `http://localhost:3000`
-- `apps/admin`: separately built internal Next.js App Router application at
+- `frontend/web`: public Next.js App Router application at `http://localhost:3000`
+- `frontend/admin`: separately built internal Next.js App Router application at
   `http://localhost:3001`
-- `apps/api`: NestJS modular-monolith API at
+- `backend/api`: NestJS modular-monolith API at
   `http://localhost:4000/api/v1`
 - `packages/types`: framework-independent enums and shared response shapes
 - `packages/ui`: minimal shared UI primitives
@@ -70,18 +72,18 @@ Copy the examples before starting apps:
 
 ```bash
 cp .env.example .env
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env.local
-cp apps/admin/.env.example apps/admin/.env.local
+cp backend/api/.env.example backend/api/.env
+cp frontend/web/.env.example frontend/web/.env.local
+cp frontend/admin/.env.example frontend/admin/.env.local
 ```
 
 Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
-Copy-Item apps/api/.env.example apps/api/.env
-Copy-Item apps/web/.env.example apps/web/.env.local
-Copy-Item apps/admin/.env.example apps/admin/.env.local
+Copy-Item backend/api/.env.example backend/api/.env
+Copy-Item frontend/web/.env.example frontend/web/.env.local
+Copy-Item frontend/admin/.env.example frontend/admin/.env.local
 ```
 
 Required local variables include:
@@ -96,14 +98,20 @@ Required local variables include:
 - `REFRESH_TOKEN_TTL`
 - `CORS_ALLOWED_ORIGINS`
 - `NEXT_PUBLIC_API_URL`
+- `PUBLIC_WEB_URL`
+- `GOOGLE_OAUTH_CLIENT_ID` and `NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID` (the same Google Identity Services web client ID)
 - `ADMIN_SEED_EMAIL`
 - `ADMIN_SEED_PASSWORD`
 - `ADMIN_SEED_2FA_ENABLED`
+- `MAIL_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `MAIL_FROM_ADDRESS`
+- `PUBLIC_SITE_URL`, `ADMIN_SITE_URL`, and `ADMIN_NOTIFICATION_EMAIL`
+- `SMTP_TEST_RECIPIENT` (the controlled mailbox used by the SMTP verification command)
 - `OBJECT_STORAGE_PROVIDER`
 - `OBJECT_STORAGE_LOCAL_DIR`
 - `DOCUMENT_MAX_FILE_SIZE_BYTES`
 - `DOCUMENT_ALLOWED_MIME_TYPES`
 - `SIGNED_URL_TTL_SECONDS`
+- `DOCUMENT_SCAN_ENABLED`, `CLAMAV_HOST`, `CLAMAV_PORT`, and `DOCUMENT_SCAN_TIMEOUT_MS`
 - `ADMIN_2FA_ENCRYPTION_KEY` (base64-encoded 32-byte AES-256-GCM key)
 - `ADMIN_AUTH_CHALLENGE_SECRET`
 - `ADMIN_AUTH_CHALLENGE_TTL`
@@ -122,6 +130,13 @@ The storage variables also include optional S3-compatible placeholders:
 `OBJECT_STORAGE_REGION`, `OBJECT_STORAGE_ACCESS_KEY_ID`, and
 `OBJECT_STORAGE_SECRET_ACCESS_KEY`. Sprint 2 uses the local private adapter by
 default. Never use example secrets outside local development.
+
+Google sign-in uses the official Google Identity Services button. Add
+`http://localhost:3000` as an authorized JavaScript origin in the Google Cloud
+OAuth web-client configuration, then set the same client ID in the API and web
+environment files. Public Google sign-in can create a Setu account. Admin
+authentication remains separately protected by administrator email, password,
+and authenticator-app TOTP.
 
 ## Starting PostgreSQL and Redis
 
@@ -203,8 +218,8 @@ Default local URLs:
 
 ## Vendor onboarding flow
 
-Use `http://localhost:3000/dev-auth` to sign in through the development-only
-public auth endpoint, then open `/vendor/onboarding`.
+Create a public Setu account at `http://localhost:3000/auth?intent=signup`,
+then open `/vendor/onboarding` to register your business.
 
 Implemented public-web screens:
 
@@ -252,10 +267,10 @@ Admin verification endpoints include:
 
 ## Authentication behavior
 
-Public development auth is available at `POST /api/v1/auth/dev-login` only when
-`NODE_ENV` is not `production`. It creates or finds a development user and
-returns a short-lived access token while also setting an HTTP-only refresh
-cookie.
+Public accounts use `POST /api/v1/auth/register` and
+`POST /api/v1/auth/login`. Passwords are hashed with bcrypt, access tokens are
+short-lived, and the API sets an HTTP-only refresh cookie. Email verification
+and password reset require an email delivery provider before public launch.
 
 Starting vendor onboarding safely upgrades a public `USER` to `VENDOR` and
 creates exactly one owner-only vendor profile. Vendor routes use the public auth
@@ -268,6 +283,25 @@ tokens use separate JWT audiences, guards, and refresh cookies.
 Refresh tokens are random opaque credentials. Only SHA-256 hashes are stored.
 Refresh rotation revokes the previous session, and reuse detection revokes the
 token family.
+
+### Transactional SMTP email
+
+The API owns all transactional mail through Nodemailer and an authenticated SMTP
+mailbox. SMTP credentials are never exposed to the public or admin frontends.
+Set `MAIL_ENABLED=false` during ordinary local development; production startup
+requires SMTP credentials, sender address, public/admin URLs, and the admin
+notification inbox. Core delivery events are password reset and password-change
+security notices, vendor verification submission and state changes, marketplace
+inquiry creation, meaningful inquiry status changes, and customer withdrawals.
+Rapid marketplace messages remain in-app only to avoid email flooding.
+
+### Finance and insurance referrals
+
+Finance and insurance use the same provider-directory flow as every other Setu
+category. Visitors can read service definitions, browse approved providers,
+open a provider profile, and send an inquiry directly to that provider. Setu
+does not sell, compare, price, quote, recommend, purchase, issue, or service
+financial or insurance products and does not provide regulated advice.
 
 Admin password login never issues a normal access token directly. It returns a
 short-lived, single-use challenge. A first login with no confirmed secret goes
@@ -326,6 +360,32 @@ pnpm format:check
 CI runs install, Prisma generation, lint, typecheck, tests, and build with
 PostgreSQL and Redis service containers.
 
+## Self-hosted production deployment
+
+Setu's canonical production deployment is a self-hosted Linux server running
+Docker Compose. GitHub Actions runs CI, builds commit-SHA-tagged application
+images, publishes them to GitHub Container Registry, and deploys the same
+immutable image tag over SSH after the appropriate GitHub Environment approval.
+
+Production uses Caddy for HTTPS and domain routing, with separate public,
+admin, API, and signed-object-storage hostnames. Web, admin, API, PostgreSQL,
+Redis, and MinIO communicate on private Docker networks; only Caddy publishes
+ports 80 and 443. PostgreSQL, Redis, MinIO's console, and application ports are
+not exposed directly.
+
+The production implementation is under:
+
+- `infrastructure/docker/docker-compose.production.yml`
+- `infrastructure/docker/Caddyfile`
+- `infrastructure/scripts/`
+- `docs/deployment/`
+
+Start with [the self-hosted deployment guide](docs/deployment/self-hosted.md)
+and [server bootstrap](docs/deployment/server-bootstrap.md). Copy
+`.env.production.example` and the application environment templates to the
+server; do not commit real production secrets. Production migrations use
+`pnpm db:migrate:deploy` inside the pulled API image, never `prisma migrate dev`.
+
 ### Windows SWC fallback
 
 The public and admin Next.js scripts use `scripts/next-wasm.cjs`, which points
@@ -341,11 +401,13 @@ Not implemented:
 - Category/city admin management screens
 - Inquiry or lead management
 - Messaging, reviews, subscriptions, billing, or payments
-- SMS, WhatsApp OTP, email delivery, S3 production uploads, or antivirus scanning
+- SMS, WhatsApp OTP, and live provider integrations
 - Insurance quotation or insurer integrations
 - Production gateway rules such as IP allowlisting or generic 404 masking
-- Production S3-compatible adapter and malware scanning; Sprint 3 uses the
-  private local adapter behind the storage abstraction
+- ClamAV malware scanning is integrated for production uploads and fails closed
+  when the scanner is unavailable. Staging EICAR/outage verification remains a
+  release-gate task. The self-hosted production deployment uses the
+  S3-compatible adapter with private MinIO.
 - Vendor reactivation is intentionally not implemented; only
   `PENDING_REVIEW -> APPROVED`, `PENDING_REVIEW -> REJECTED`, and
   `APPROVED -> SUSPENDED` are allowed
@@ -538,9 +600,11 @@ in a future production gateway or revalidation hook.
 ### Development seed data
 
 The explicit development seed creates three clearly fake approved providers
-using `example.com` domains, plus the existing categories and locations. Set
-`SEED_PUBLIC_FIXTURES=false` to omit these fixtures. Production seed execution
-does not create public fixtures.
+using `example.com` domains, plus the existing categories and locations. These
+fixtures are for local development only. Set `SEED_PUBLIC_FIXTURES=false` to
+omit them; production seed execution rejects public fixtures. Launch requires
+reviewed provider records entered through onboarding or an approved import
+process.
 
 ### Sprint 4 limitations
 
@@ -576,8 +640,7 @@ insurance behavior is included.
 ```
 
 The inquiry form is shown on an approved public vendor profile. Unauthenticated
-users are sent to `/dev-auth` with a safe internal return path. The development
-login control is unavailable when `NODE_ENV=production`.
+users are sent to `/auth` with a safe internal return path.
 
 ### Inquiry API
 
@@ -625,9 +688,9 @@ production credentials or production seed data are committed.
 ### Sprint 5 limitations and next sprint
 
 Messaging is request/response HTTP only (no WebSockets, typing indicators, or
-presence). Notifications are in-app only; email, SMS, WhatsApp, push delivery,
-retention/archival jobs, abuse tooling, and admin inquiry monitoring are not
-implemented. Admin can continue to use existing vendor verification screens,
+presence). Notifications are in-app plus targeted SMTP transactional email;
+SMS, WhatsApp, push delivery, retention/archival jobs, abuse tooling, and admin
+inquiry monitoring are not implemented. Admin can continue to use existing vendor verification screens,
 but Sprint 5 does not add a dedicated inquiry-monitoring dashboard. Sprint 6
 can add moderation/operations views, delivery integrations, retention policy,
 and richer vendor/user account navigation without changing the ownership and
@@ -728,3 +791,10 @@ catalogue endpoints additionally require `INSURANCE_PRODUCT_CATALOG_ENABLED`.
 All insurance flags default to `false`; production environment validation
 rejects enabled insurance flags until the production controls are explicitly
 revisited.
+
+### Netlify frontends
+
+The public web and internal admin apps can also deploy as two separate Netlify
+sites, while the NestJS API and its PostgreSQL, Redis, object storage, and SMTP
+dependencies remain on a persistent backend host. See
+[the Netlify frontend deployment guide](docs/deployment/netlify-frontends.md).

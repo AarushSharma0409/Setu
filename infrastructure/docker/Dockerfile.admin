@@ -1,15 +1,33 @@
-FROM node:24-alpine AS build
+FROM node:24.12.0-alpine AS base
 WORKDIR /app
-RUN corepack enable
-COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @setu/admin build
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 
-FROM node:24-alpine AS runtime
-WORKDIR /app
+FROM base AS dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY frontend/web/package.json frontend/web/package.json
+COPY frontend/admin/package.json frontend/admin/package.json
+COPY backend/api/package.json backend/api/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/types/package.json packages/types/package.json
+COPY packages/ui/package.json packages/ui/package.json
+RUN pnpm install --frozen-lockfile
+
+FROM dependencies AS builder
+COPY . .
+ARG NEXT_PUBLIC_API_URL=/api/v1
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN mkdir -p frontend/admin/public && pnpm --filter @setu/admin build
+RUN pnpm --filter @setu/admin deploy --legacy --prod /opt/setu-admin
+
+FROM base AS runner
 ENV NODE_ENV=production
-RUN corepack enable
-COPY --from=build /app /app
-USER node
+RUN addgroup --system --gid 1001 setu && adduser --system --uid 1001 --ingroup setu setu
+WORKDIR /app
+COPY --from=builder --chown=setu:setu /opt/setu-admin /app
+COPY --from=builder --chown=setu:setu /app/frontend/admin/.next /app/.next
+COPY --from=builder --chown=setu:setu /app/frontend/admin/public /app/public
+USER setu
 EXPOSE 3001
-CMD ["pnpm", "--filter", "@setu/admin", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start", ".", "--port", "3001"]

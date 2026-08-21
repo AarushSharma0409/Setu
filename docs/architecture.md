@@ -2,9 +2,9 @@
 
 Setu remains a modular monolith with three deployable applications:
 
-- Public web: `apps/web` on the public web domain.
-- Admin web: `apps/admin` on a separate restricted admin domain.
-- API: `apps/api` behind TLS and an allowlisted CORS policy.
+- Public web: `frontend/web` on the public web domain.
+- Admin web: `frontend/admin` on a separate restricted admin domain.
+- API: `backend/api` behind TLS and an allowlisted CORS policy.
 
 PostgreSQL is the source of truth. Redis provides health checks and the
 principal/IP-aware rate-limit counters. Verification documents are written

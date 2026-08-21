@@ -1,0 +1,11 @@
+{
+  "extends": "@setu/config/tsconfig/nest",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src", "test", "scripts", "prisma/seed.ts"]
+}

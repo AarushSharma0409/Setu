@@ -11,7 +11,7 @@ approved target environment.
 
 ## Security and infrastructure
 
-- [ ] Development login, fixtures, mock provider, and fake pricing disabled
+- [ ] Test-only accounts, fixtures, mock provider, and fake pricing disabled
 - [ ] Managed secrets, MFA, admin ingress controls, TLS, CSP, CORS, and rate limits verified
 - [ ] Private object storage, malware scanning, retention, and signed access verified
 - [ ] PostgreSQL/Redis readiness, migration deploy, backup, and restore verified

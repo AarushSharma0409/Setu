@@ -1,27 +1,16 @@
-# Docker Development
+# Docker
 
-The root `docker-compose.yml` owns Sprint 1 infrastructure:
+`../../docker-compose.yml` is deliberately local-development-only. It exposes
+PostgreSQL and Redis for `pnpm dev` on a developer machine.
 
-- PostgreSQL 16 on `localhost:5432`
-- Redis 7 on `localhost:6379`
-- Persistent named volumes for both services
+`docker-compose.production.yml` is the canonical self-hosted Linux deployment
+stack. It runs Caddy, web, admin, API, PostgreSQL, Redis, and private MinIO on
+isolated networks. Only Caddy publishes ports 80 and 443. Application images
+are pulled from GHCR using an immutable Git SHA; production servers do not
+build source code.
 
-Application processes run outside Docker during local development.
-
-Production-oriented Dockerfiles are provided for the API, public web, and
-admin web in this directory. Build them from the repository root:
-
-```bash
-docker build -f infrastructure/docker/Dockerfile.api -t setu-api:latest .
-docker build -f infrastructure/docker/Dockerfile.web -t setu-web:latest .
-docker build -f infrastructure/docker/Dockerfile.admin -t setu-admin:latest .
-```
-
-`docker-compose.production.yml` is a deployment template. Supply production
-environment files and secrets through the deployment platform; never commit
-them or use the local compose credentials in production.
-
-The API service includes a liveness health check. The public web and admin
-services wait for that check before starting, which makes a staging smoke test
-fail fast when API startup cannot complete. Run database migrations as a
-separate deployment job before starting application services.
+Copy `../../.env.production.example` to `/opt/setu/.env`, then copy the three
+application templates in this directory to `/opt/setu/api.env`,
+`/opt/setu/web.env`, and `/opt/setu/admin.env`. See
+`../../docs/deployment/self-hosted.md` for the required server setup and
+operational commands.

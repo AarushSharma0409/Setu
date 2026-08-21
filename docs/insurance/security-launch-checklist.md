@@ -2,7 +2,7 @@
 
 Do not mark an item complete without deployment evidence.
 
-- [ ] Development login and fixtures disabled
+- [ ] Test-only accounts and fixtures disabled
 - [ ] No fake pricing, test organization, or offline adapter exposed
 - [ ] Production secrets loaded from a managed secret store and key rotation recorded
 - [ ] Admin MFA enforced and admin ingress restricted

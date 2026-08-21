@@ -1,10 +1,46 @@
+name: ${COMPOSE_PROJECT_NAME:-setu-production}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+    max-file: ${DOCKER_LOG_MAX_FILES:-3}
+
 services:
-  postgres:
-    image: postgres:16-alpine
+  caddy:
+    image: caddy:2.10.2-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:?set a production database user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a production database password}
+      CADDY_EMAIL: ${CADDY_EMAIL:?set CADDY_EMAIL}
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?set ADMIN_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+      STORAGE_DOMAIN: ${STORAGE_DOMAIN:?set STORAGE_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - setu_caddy_data:/data
+      - setu_caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+    networks:
+      - edge
+      - setu-network
+    logging: *default-logging
+
+  postgres:
+    image: postgres:16.9-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-setu}
     volumes:
       - setu_postgres_data:/var/lib/postgresql/data
@@ -12,28 +48,118 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
+    networks: [setu-network]
+    logging: *default-logging
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.2-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD:?set REDIS_PASSWORD}",
+        "--maxmemory-policy",
+        "${REDIS_MAXMEMORY_POLICY:-noeviction}",
+      ]
     volumes:
       - setu_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        [
+          "CMD-SHELL",
+          'redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping | grep -q PONG',
+        ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
+    networks: [setu-network]
+    logging: *default-logging
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: server /data --address :9000 --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
+    volumes:
+      - setu_minio_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail --silent http://127.0.0.1:9000/minio/health/live >/dev/null",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks: [setu-network]
+    logging: *default-logging
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    restart: "no"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET:?set MINIO_BUCKET}
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >-
+      /bin/sh -ec 'mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+      mc mb --ignore-existing "local/$${MINIO_BUCKET}";
+      mc version enable "local/$${MINIO_BUCKET}";
+      mc anonymous set none "local/$${MINIO_BUCKET}"'
+    networks: [setu-network]
+    logging: *default-logging
+
+  clamav:
+    image: clamav/clamav:1.4.3
+    restart: unless-stopped
+    expose: ["3310"]
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1 >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    networks: [setu-network]
+    logging: *default-logging
 
   api:
-    image: ${SETU_API_IMAGE:-setu-api:latest}
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/setu-api:${SETU_IMAGE_TAG:?set SETU_IMAGE_TAG}
     restart: unless-stopped
-    env_file: ["${SETU_API_ENV_FILE:?set an API env file path}"]
-    depends_on:
-      postgres: { condition: service_healthy }
-      redis: { condition: service_healthy }
+    env_file:
+      - ${SETU_API_ENV_FILE:?set SETU_API_ENV_FILE}
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-setu}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      OBJECT_STORAGE_PROVIDER: s3
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      OBJECT_STORAGE_PUBLIC_ENDPOINT: https://${STORAGE_DOMAIN}
+      OBJECT_STORAGE_REGION: ${OBJECT_STORAGE_REGION:-us-east-1}
+      OBJECT_STORAGE_BUCKET: ${MINIO_BUCKET}
+      OBJECT_STORAGE_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      S3_FORCE_PATH_STYLE: "true"
     expose: ["4000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -44,25 +170,69 @@ services:
         ]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 20s
+      retries: 10
+      start_period: 30s
+    networks: [setu-network]
+    logging: *default-logging
 
   web:
-    image: ${SETU_WEB_IMAGE:-setu-web:latest}
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/setu-web:${SETU_IMAGE_TAG:?set SETU_IMAGE_TAG}
     restart: unless-stopped
-    env_file: ["${SETU_WEB_ENV_FILE:?set a web env file path}"]
+    env_file:
+      - ${SETU_WEB_ENV_FILE:?set SETU_WEB_ENV_FILE}
+    environment:
+      SETU_INTERNAL_API_URL: http://api:4000/api/v1
+    expose: ["3000"]
     depends_on:
-      api: { condition: service_healthy }
-    ports: ["${WEB_PORT:-3000}:3000"]
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks: [setu-network]
+    logging: *default-logging
 
   admin:
-    image: ${SETU_ADMIN_IMAGE:-setu-admin:latest}
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/setu-admin:${SETU_IMAGE_TAG:?set SETU_IMAGE_TAG}
     restart: unless-stopped
-    env_file: ["${SETU_ADMIN_ENV_FILE:?set an admin env file path}"]
+    env_file:
+      - ${SETU_ADMIN_ENV_FILE:?set SETU_ADMIN_ENV_FILE}
+    expose: ["3001"]
     depends_on:
-      api: { condition: service_healthy }
-    ports: ["${ADMIN_PORT:-3001}:3001"]
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/login').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks: [setu-network]
+    logging: *default-logging
+
+networks:
+  edge:
+  setu-network:
+    internal: true
 
 volumes:
+  setu_caddy_data:
+  setu_caddy_config:
   setu_postgres_data:
   setu_redis_data:
+  setu_minio_data:

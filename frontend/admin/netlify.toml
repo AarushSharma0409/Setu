@@ -1,0 +1,7 @@
+[build]
+  command = "pnpm --filter @setu/admin build"
+  publish = "frontend/admin/.next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "11.9.0"

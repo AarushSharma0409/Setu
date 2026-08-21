@@ -1,15 +1,32 @@
-FROM node:24-alpine AS build
+FROM node:24.12.0-alpine AS base
 WORKDIR /app
-RUN corepack enable
-COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm db:generate && pnpm --filter @setu/api build
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 
-FROM node:24-alpine AS runtime
-WORKDIR /app
+FROM base AS dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY frontend/web/package.json frontend/web/package.json
+COPY frontend/admin/package.json frontend/admin/package.json
+COPY backend/api/package.json backend/api/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/types/package.json packages/types/package.json
+COPY packages/ui/package.json packages/ui/package.json
+RUN pnpm install --frozen-lockfile
+
+FROM dependencies AS builder
+COPY . .
+ENV DATABASE_URL=postgresql://setu:setu-build-only-password@localhost:5432/setu?schema=public
+RUN pnpm db:generate && pnpm --filter @setu/api build
+RUN pnpm --filter @setu/api deploy --legacy --prod /opt/setu-api
+
+FROM base AS runner
 ENV NODE_ENV=production
-RUN corepack enable
-COPY --from=build /app /app
-USER node
+RUN addgroup --system --gid 1001 setu && adduser --system --uid 1001 --ingroup setu setu
+WORKDIR /app
+COPY --from=builder --chown=setu:setu /opt/setu-api /app
+COPY --from=builder --chown=setu:setu /app/backend/api/dist /app/dist
+COPY --from=builder --chown=setu:setu /app/backend/api/prisma /app/prisma
+USER setu
 EXPOSE 4000
-CMD ["pnpm", "--filter", "@setu/api", "start"]
+CMD ["node", "dist/main.js"]

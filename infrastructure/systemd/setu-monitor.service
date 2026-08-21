@@ -1,0 +1,10 @@
+[Unit]
+Description=Setu production availability monitor
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=setu-deploy
+WorkingDirectory=/opt/setu
+ExecStart=/opt/setu/scripts/monitor-production.sh

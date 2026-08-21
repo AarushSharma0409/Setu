@@ -1,0 +1,2159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  VENDOR
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  OPERATIONS
+  REVIEWER
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum SessionSubjectType {
+  USER
+  ADMIN
+}
+
+enum VendorStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum VendorDocumentType {
+  GST_CERTIFICATE
+  PAN_CARD
+  BUSINESS_REGISTRATION
+  ADDRESS_PROOF
+  OTHER
+}
+
+enum VendorDocumentStatus {
+  UPLOADED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum AdminAuthChallengeType {
+  TOTP_VERIFY
+  TOTP_ENROLLMENT
+}
+
+enum VendorVerificationDecisionType {
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum InquiryStatus {
+  NEW
+  VIEWED
+  CONTACTED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  WITHDRAWN
+}
+
+enum InquiryActorType {
+  USER
+  VENDOR
+  SYSTEM
+  ADMIN
+}
+
+enum InquiryMessageSenderType {
+  USER
+  VENDOR
+  SYSTEM
+}
+
+enum NotificationRecipientType {
+  USER
+  VENDOR
+}
+
+enum NotificationType {
+  INQUIRY_CREATED
+  INQUIRY_MESSAGE
+  INQUIRY_STATUS_CHANGED
+  INQUIRY_WITHDRAWN
+  VENDOR_APPLICATION_SUBMITTED
+  VENDOR_APPLICATION_APPROVED
+  VENDOR_APPLICATION_SUSPENDED
+}
+
+enum InsuranceOperatingRole {
+  BROKER
+  WEB_AGGREGATOR
+  CORPORATE_AGENT
+  INSURANCE_MARKETING_FIRM
+  DIRECT_INSURER_PLATFORM
+  TECHNOLOGY_SERVICE_PROVIDER
+  OTHER_LICENSED_MODEL
+}
+
+enum InsuranceOperatingModelStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+  REVOKED
+  ARCHIVED
+}
+
+enum InsuranceCapability {
+  DISPLAY_INSURANCE_PRODUCTS
+  COLLECT_CUSTOMER_NEEDS
+  REQUEST_QUOTES
+  COMPARE_QUOTES
+  RANK_QUOTES
+  RECOMMEND_PRODUCTS
+  REDIRECT_TO_PURCHASE
+  COLLECT_PAYMENT
+  ISSUE_POLICY
+  GENERATE_POLICY_DOCUMENTS
+  SERVICE_POLICY
+  HANDLE_CLAIMS
+}
+
+enum InsuranceOrganizationType {
+  INSURER
+  INTERMEDIARY
+  BROKER
+  CORPORATE_AGENT
+  INSURANCE_MARKETING_FIRM
+  OTHER_LICENSED_ORGANIZATION
+}
+
+enum InsuranceOrganizationStatus {
+  DRAFT
+  PENDING_VERIFICATION
+  ACTIVE
+  REJECTED
+  SUSPENDED
+  EXPIRED
+}
+
+enum InsuranceLicenceStatus {
+  DRAFT
+  VALID
+  EXPIRED
+  SUSPENDED
+  REVOKED
+}
+
+enum InsuranceDocumentType {
+  REGULATORY_LICENCE
+  CERTIFICATE_OF_REGISTRATION
+  AUTHORIZATION_LETTER
+  BOARD_AUTHORIZATION
+  TAX_REGISTRATION
+  BUSINESS_REGISTRATION
+  DATA_PROCESSING_AGREEMENT
+  COMMERCIAL_AGREEMENT
+  PRODUCT_AUTHORIZATION
+  OTHER
+}
+
+enum InsuranceDocumentStatus {
+  UPLOADED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum InsuranceOrganizationUserRole {
+  ORGANIZATION_ADMIN
+  PRODUCT_MANAGER
+  COMPLIANCE_MANAGER
+  INTEGRATION_MANAGER
+  OPERATIONS_USER
+  READ_ONLY
+}
+
+enum InsuranceOrganizationUserStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum InsuranceLineStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum InsurancePolicyTypeStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum InsuranceTemplateStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum InsuranceDisclosureAudience {
+  CUSTOMER
+  ORGANIZATION_USER
+  ADMIN
+  PUBLIC
+}
+
+enum InsuranceDisclosurePurpose {
+  OPERATING_ROLE
+  QUOTE_COMPARISON
+  RANKING_METHODOLOGY
+  COMMERCIAL_RELATIONSHIP
+  DATA_USE
+  REDIRECT
+  NO_POLICY_ISSUANCE
+  GENERAL_INSURANCE_NOTICE
+}
+
+enum InsuranceConsentPurpose {
+  QUOTE_REQUEST
+  INSURER_DATA_SHARING
+  SENSITIVE_DATA_PROCESSING
+  MARKETING
+  PROFILE_SAVING
+  REDIRECT_HANDOFF
+}
+
+enum InsuranceProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  WITHDRAWN
+  EXPIRED
+  ARCHIVED
+}
+
+enum InsuranceProductVersionStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  RETIRED
+}
+
+enum InsuranceCoverageType {
+  CORE
+  OPTIONAL
+  CONDITIONAL
+}
+
+enum InsuranceEligibilityRuleType {
+  MIN_ENTRY_AGE
+  MAX_ENTRY_AGE
+  MIN_POLICY_TERM
+  MAX_POLICY_TERM
+  MIN_SUM_INSURED
+  MAX_SUM_INSURED
+  GEOGRAPHY
+  CUSTOM
+}
+
+enum InsuranceEligibilityOperator {
+  EQUALS
+  GREATER_THAN_OR_EQUAL
+  LESS_THAN_OR_EQUAL
+  IN
+  NOT_IN
+}
+
+enum InsurancePremiumBasisType {
+  AGE_BANDED
+  SUM_INSURED_BASED
+  VEHICLE_BASED
+  FIXED
+  TERM_BASED
+  UNDERWRITING_BASED
+  COMBINATION
+}
+
+enum InsuranceDurationUnit {
+  DAYS
+  MONTHS
+  YEARS
+}
+
+enum InsuranceWaitingPeriodType {
+  INITIAL
+  SPECIFIC_CONDITION
+  PRE_EXISTING_CONDITION
+  MATERNITY
+  CUSTOM
+}
+
+enum InsuranceAddonStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InsurancePremiumImpactType {
+  INCLUDED
+  ADDITIONAL_UNSPECIFIED
+  VARIABLE
+  NOT_APPLICABLE
+}
+
+enum InsuranceDeductibleType {
+  FIXED
+  PERCENTAGE
+  VOLUNTARY
+  COMPULSORY
+  CO_PAY
+  OTHER
+}
+
+enum InsuranceAvailabilityScope {
+  PAN_INDIA
+  SELECTED_STATES
+  SELECTED_CITIES
+  MIXED
+}
+
+enum InsuranceAvailabilityType {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum InsuranceProductDocumentType {
+  PRODUCT_BROCHURE
+  POLICY_WORDING
+  TERMS_AND_CONDITIONS
+  BENEFIT_SCHEDULE
+  PROSPECTUS
+  RATE_REFERENCE
+  REGULATORY_APPROVAL
+  OTHER
+}
+
+enum InsuranceProductDocumentStatus {
+  UPLOADED
+  APPROVED
+  REJECTED
+  RETIRED
+}
+
+enum InsuranceQuestionSchemaStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+enum InsuranceQuestionFieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DATE
+  BOOLEAN
+  SINGLE_SELECT
+  MULTI_SELECT
+  CURRENCY
+  PHONE
+  EMAIL
+}
+enum InsuranceDataClassification {
+  GENERAL
+  CONTACT
+  FINANCIAL_PREFERENCE
+  HEALTH_SENSITIVE
+  VEHICLE
+  IDENTITY
+}
+enum InsuranceVisibilityOperator {
+  EQUALS
+  NOT_EQUALS
+  IN
+  NOT_IN
+  IS_TRUE
+  IS_FALSE
+}
+enum InsuranceNeedAssessmentStatus {
+  DRAFT
+  IN_PROGRESS
+  READY_FOR_REVIEW
+  SUBMITTED
+  EXPIRED
+  WITHDRAWN
+}
+enum InsuranceConsentStatus {
+  GRANTED
+  WITHDRAWN
+}
+
+enum InsuranceQuoteRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  PARTIALLY_COMPLETED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum InsuranceQuoteSourceMode {
+  MANUAL_RATE_CARD
+  INTERNAL_RULE_ENGINE
+}
+
+enum InsuranceEligibilityEvaluationStatus {
+  ELIGIBLE
+  INELIGIBLE
+  UNDETERMINED
+  ERROR
+}
+
+enum InsuranceEligibilityReasonSeverity {
+  INFO
+  WARNING
+  ERROR
+}
+
+enum InsuranceRateCardStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum InsuranceQuoteAttemptStatus {
+  SUCCESS
+  INELIGIBLE
+  UNAVAILABLE
+  FAILED
+}
+
+enum InsuranceQuoteFailureCategory {
+  ELIGIBILITY
+  CONFIGURATION
+  PRICING
+  PROVIDER_UNAVAILABLE
+  VALIDATION
+  SYSTEM
+}
+
+enum InsuranceQuoteStatus {
+  GENERATED
+  INELIGIBLE
+  UNAVAILABLE
+  FAILED
+  EXPIRED
+  SUPERSEDED
+}
+
+enum InsuranceRankingMethodologyStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum InsuranceRankingMethodologyType {
+  RULE_BASED_SCORE
+  CUSTOMER_PREFERENCE_MATCH
+  NEUTRAL_SORT
+}
+
+enum InsuranceComparisonSortMode {
+  DEFAULT
+  LOWEST_PREMIUM
+  HIGHEST_COVER
+  LOWEST_DEDUCTIBLE
+  SHORTEST_WAITING_PERIOD
+  INSURER_NAME
+  PRODUCT_NAME
+}
+
+enum InsuranceIntegrationProviderType {
+  INSURER
+  BROKER
+  AGGREGATOR
+  OTHER_APPROVED_PROVIDER
+}
+
+enum InsuranceIntegrationEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+enum InsuranceIntegrationStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum InsuranceProviderAuthType {
+  API_KEY
+  BASIC
+  OAUTH2_CLIENT_CREDENTIALS
+  JWT_CLIENT_ASSERTION
+  MUTUAL_TLS
+  SIGNED_REQUEST
+  CUSTOM
+}
+
+enum InsuranceProviderHealthStatus {
+  UNKNOWN
+  HEALTHY
+  DEGRADED
+  UNAVAILABLE
+}
+
+enum InsuranceProviderMappingStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InsuranceProviderRequestOperation {
+  QUOTE
+  HANDOFF
+  CALLBACK
+  STATUS_LOOKUP
+}
+
+enum InsuranceProviderRequestStatus {
+  STARTED
+  SUCCEEDED
+  FAILED
+  RETRYING
+}
+
+enum InsuranceProviderErrorCategory {
+  AUTHENTICATION
+  AUTHORIZATION
+  VALIDATION
+  PRODUCT_UNAVAILABLE
+  CUSTOMER_INELIGIBLE
+  RATE_LIMITED
+  TIMEOUT
+  NETWORK
+  PROVIDER_UNAVAILABLE
+  PROVIDER_ERROR
+  INVALID_RESPONSE
+  CONFIGURATION
+  SYSTEM
+}
+
+enum InsurancePurchaseHandoffStatus {
+  CREATED
+  READY
+  REDIRECTED
+  ACKNOWLEDGED
+  COMPLETED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum InsuranceHandoffDestinationType {
+  PROVIDER_REDIRECT
+}
+
+enum InsuranceRedirectEventType {
+  HANDOFF_CREATED
+  REDIRECT_INITIATED
+  REDIRECT_COMPLETED
+  RETURN_RECEIVED
+}
+
+enum InsuranceProviderEventStatus {
+  RECEIVED
+  PROCESSED
+  REJECTED
+  FAILED
+}
+
+enum InsuranceExternalConversionStatus {
+  UNKNOWN
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone                  String?                 @unique
+  email                  String?                 @unique
+  passwordHash           String?
+  name                   String?
+  role                   UserRole                @default(USER)
+  status                 AccountStatus           @default(ACTIVE)
+  phoneVerified          Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  sessions               RefreshSession[]
+  vendorProfile          VendorProfile?
+  inquiries              Inquiry[]
+  notifications          Notification[]          @relation("UserNotifications")
+  inquiryMessages        InquiryMessage[]        @relation("UserInquiryMessages")
+  statusHistory          InquiryStatusHistory[]  @relation("UserStatusHistory")
+  inquiryIdempotencyKeys InquiryIdempotencyKey[]
+  insuranceOrganizationMemberships InsuranceOrganizationUser[]
+  uploadedInsuranceProductDocuments InsuranceProductDocument[] @relation("InsuranceProductDocumentUploadedByUser")
+  insuranceNeedAssessments InsuranceNeedAssessment[]
+  insuranceNeedAnswers InsuranceNeedAnswer[] @relation("InsuranceNeedAnswerCreatedByUser")
+  insuranceDisclosureAcknowledgements InsuranceDisclosureAcknowledgement[]
+  insuranceConsentRecords InsuranceConsentRecord[]
+  insuranceQuoteRequests InsuranceQuoteRequest[]
+  insuranceQuotes InsuranceQuote[]
+  insuranceSavedQuotes InsuranceSavedQuote[]
+  insurancePurchaseHandoffs InsurancePurchaseHandoff[]
+  insuranceRedirectEvents InsuranceRedirectEvent[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([role])
+  @@index([status])
+}
+
+model AdminUser {
+  id                        String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                     String                       @unique
+  passwordHash              String
+  role                      AdminRole                    @default(REVIEWER)
+  status                    AccountStatus                @default(ACTIVE)
+  twoFactorEnabled          Boolean                      @default(false)
+  twoFactorSecretEncrypted  String?
+  twoFactorSecretKeyVersion Int?
+  twoFactorConfirmedAt      DateTime?
+  lastLoginAt               DateTime?
+  failedLoginCount          Int                          @default(0)
+  lockedUntil               DateTime?
+  createdAt                 DateTime                     @default(now())
+  updatedAt                 DateTime                     @updatedAt
+  sessions                  RefreshSession[]
+  auditLogs                 AuditLog[]
+  authChallenges            AdminAuthChallenge[]
+  recoveryCodes             AdminRecoveryCode[]
+  reviewedVendors           VendorProfile[]              @relation("VendorReviewedBy")
+  suspendedVendors          VendorProfile[]              @relation("VendorSuspendedBy")
+  verificationDecisions     VendorVerificationDecision[]
+  insuranceOperatingModelsCreated InsuranceOperatingModel[] @relation("InsuranceOperatingModelCreatedBy")
+  insuranceDocumentsUploaded InsuranceOrganizationDocument[] @relation("InsuranceDocumentUploadedByAdmin")
+  insuranceRateCardsCreated InsuranceRateCard[] @relation("InsuranceRateCardCreatedBy")
+  insuranceRateCardsApproved InsuranceRateCard[] @relation("InsuranceRateCardApprovedBy")
+  insuranceRankingMethodologiesCreated InsuranceRankingMethodology[] @relation("InsuranceRankingMethodologyCreatedBy")
+  insuranceRankingMethodologiesPublished InsuranceRankingMethodology[] @relation("InsuranceRankingMethodologyPublishedBy")
+  insuranceDocumentsReviewed InsuranceOrganizationDocument[] @relation("InsuranceDocumentReviewedByAdmin")
+  insuranceDisclosuresCreated InsuranceDisclosureTemplate[] @relation("InsuranceDisclosureCreatedBy")
+  insuranceDisclosuresPublished InsuranceDisclosureTemplate[] @relation("InsuranceDisclosurePublishedBy")
+  insuranceConsentsCreated InsuranceConsentTemplate[] @relation("InsuranceConsentCreatedBy")
+  insuranceConsentsPublished InsuranceConsentTemplate[] @relation("InsuranceConsentPublishedBy")
+  insuranceConfigurationHistory InsuranceConfigurationHistory[]
+  insuranceProductsCreated InsuranceProduct[] @relation("InsuranceProductCreatedBy")
+  insuranceProductVersionsCreated InsuranceProductVersion[] @relation("InsuranceProductVersionCreatedBy")
+  insuranceProductVersionsApproved InsuranceProductVersion[] @relation("InsuranceProductVersionApprovedBy")
+  insuranceProductDocumentsUploaded InsuranceProductDocument[] @relation("InsuranceProductDocumentUploadedByAdmin")
+  insuranceProductDocumentsApproved InsuranceProductDocument[] @relation("InsuranceProductDocumentApprovedBy")
+  insuranceQuestionSchemasCreated InsuranceQuestionSchema[] @relation("InsuranceQuestionSchemaCreatedBy")
+  insuranceQuestionSchemasPublished InsuranceQuestionSchema[] @relation("InsuranceQuestionSchemaPublishedBy")
+
+  @@index([role])
+  @@index([status])
+}
+
+model RefreshSession {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectType         SessionSubjectType
+  userId              String?            @db.Uuid
+  adminUserId         String?            @db.Uuid
+  tokenHash           String
+  tokenFamily         String             @db.Uuid
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedBySessionId String?            @db.Uuid
+  reuseDetectedAt     DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  user                User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adminUser           AdminUser?         @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@unique([tokenHash])
+  @@index([userId])
+  @@index([adminUserId])
+  @@index([tokenFamily])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId String    @db.Uuid
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json      @default("{}")
+  requestId   String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([adminUserId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model AdminAuthChallenge {
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId            String                 @db.Uuid
+  type                   AdminAuthChallengeType
+  tokenHash              String                 @unique
+  pendingSecretEncrypted String?
+  expiresAt              DateTime
+  usedAt                 DateTime?
+  createdAt              DateTime               @default(now())
+  adminUser              AdminUser              @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, type])
+  @@index([expiresAt])
+}
+
+model AdminRecoveryCode {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId String    @db.Uuid
+  codeHash    String
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, usedAt])
+}
+
+model Category {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  slug             String           @unique
+  description      String?
+  isActive         Boolean          @default(true)
+  sortOrder        Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  vendorCategories VendorCategory[]
+  inquiries        Inquiry[]
+
+  @@index([isActive, sortOrder])
+  @@index([name])
+}
+
+model State {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cities    City[]
+  insuranceProductAvailability InsuranceProductAvailability[]
+
+  @@index([isActive, name])
+}
+
+model City {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stateId               String              @db.Uuid
+  name                  String
+  slug                  String
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  state                 State               @relation(fields: [stateId], references: [id], onDelete: Restrict)
+  primaryVendorProfiles VendorProfile[]     @relation("VendorPrimaryCity")
+  serviceAreas          VendorServiceArea[]
+  inquiryServiceCities  Inquiry[]
+  insuranceProductAvailability InsuranceProductAvailability[]
+
+  @@unique([stateId, slug])
+  @@index([stateId])
+  @@index([isActive, name])
+}
+
+model VendorProfile {
+  id                     String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerUserId            String                       @unique @db.Uuid
+  businessName           String?
+  slug                   String?                      @unique
+  legalName              String?
+  description            String?
+  contactEmail           String?
+  contactPhone           String?
+  websiteUrl             String?
+  yearEstablished        Int?
+  addressLine1           String?
+  addressLine2           String?
+  postalCode             String?
+  primaryCityId          String?                      @db.Uuid
+  status                 VendorStatus                 @default(DRAFT)
+  submittedAt            DateTime?
+  reviewedAt             DateTime?
+  reviewedByAdminUserId  String?                      @db.Uuid
+  rejectionReason        String?
+  suspendedAt            DateTime?
+  suspendedByAdminUserId String?                      @db.Uuid
+  suspensionReason       String?
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  owner                  User                         @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  primaryCity            City?                        @relation("VendorPrimaryCity", fields: [primaryCityId], references: [id], onDelete: Restrict)
+  reviewedByAdmin        AdminUser?                   @relation("VendorReviewedBy", fields: [reviewedByAdminUserId], references: [id], onDelete: Restrict)
+  suspendedByAdmin       AdminUser?                   @relation("VendorSuspendedBy", fields: [suspendedByAdminUserId], references: [id], onDelete: Restrict)
+  categories             VendorCategory[]
+  serviceAreas           VendorServiceArea[]
+  documents              VendorDocument[]
+  verificationDecisions  VendorVerificationDecision[]
+  inquiries              Inquiry[]
+  notifications          Notification[]               @relation("VendorNotifications")
+  inquiryMessages        InquiryMessage[]             @relation("VendorInquiryMessages")
+  statusHistory          InquiryStatusHistory[]       @relation("VendorStatusHistory")
+
+  @@index([ownerUserId])
+  @@index([status])
+  @@index([status, businessName])
+  @@index([status, primaryCityId])
+  @@index([primaryCityId])
+  @@index([submittedAt])
+  @@index([reviewedAt])
+}
+
+model VendorVerificationDecision {
+  id          String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId    String                         @db.Uuid
+  adminUserId String                         @db.Uuid
+  decision    VendorVerificationDecisionType
+  reason      String?
+  notes       String?
+  createdAt   DateTime                       @default(now())
+  vendor      VendorProfile                  @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  adminUser   AdminUser                      @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([vendorId, createdAt])
+  @@index([adminUserId, createdAt])
+  @@index([decision])
+}
+
+model VendorCategory {
+  vendorId   String        @db.Uuid
+  categoryId String        @db.Uuid
+  createdAt  DateTime      @default(now())
+  vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category   Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([vendorId, categoryId])
+  @@index([categoryId])
+}
+
+model VendorServiceArea {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId  String        @db.Uuid
+  cityId    String        @db.Uuid
+  isPrimary Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  city      City          @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  @@unique([vendorId, cityId])
+  @@index([cityId])
+  @@index([vendorId])
+}
+
+model VendorDocument {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId         String               @db.Uuid
+  type             VendorDocumentType
+  storageKey       String               @unique
+  originalFileName String
+  mimeType         String
+  sizeBytes        Int
+  checksumSha256   String
+  status           VendorDocumentStatus @default(UPLOADED)
+  metadata         Json                 @default("{}")
+  uploadedAt       DateTime             @default(now())
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  vendor           VendorProfile        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@index([type])
+  @@index([status])
+  @@index([uploadedAt])
+}
+
+model Inquiry {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referenceNumber        String                  @unique
+  userId                 String                  @db.Uuid
+  vendorId               String                  @db.Uuid
+  categoryId             String?                 @db.Uuid
+  serviceCityId          String?                 @db.Uuid
+  subject                String
+  status                 InquiryStatus           @default(NEW)
+  source                 String                  @default("PUBLIC_PROFILE")
+  preferredContactMethod String?
+  lastMessageAt          DateTime                @default(now())
+  submittedAt            DateTime                @default(now())
+  closedAt               DateTime?
+  withdrawnAt            DateTime?
+  userReadAt             DateTime?
+  vendorReadAt           DateTime?
+  version                Int                     @default(1)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vendor                 VendorProfile           @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  category               Category?               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  serviceCity            City?                   @relation(fields: [serviceCityId], references: [id], onDelete: Restrict)
+  messages               InquiryMessage[]
+  statusHistory          InquiryStatusHistory[]
+  notifications          Notification[]
+  idempotencyKeys        InquiryIdempotencyKey[]
+
+  @@index([userId, lastMessageAt])
+  @@index([vendorId, lastMessageAt])
+  @@index([status, lastMessageAt])
+  @@index([vendorId, status, lastMessageAt])
+}
+
+model InquiryMessage {
+  id             String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiryId      String                   @db.Uuid
+  senderType     InquiryMessageSenderType
+  senderUserId   String?                  @db.Uuid
+  senderVendorId String?                  @db.Uuid
+  body           String
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  inquiry        Inquiry                  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  senderUser     User?                    @relation("UserInquiryMessages", fields: [senderUserId], references: [id], onDelete: Restrict)
+  senderVendor   VendorProfile?           @relation("VendorInquiryMessages", fields: [senderVendorId], references: [id], onDelete: Restrict)
+
+  @@index([inquiryId, createdAt, id])
+  @@index([senderUserId])
+  @@index([senderVendorId])
+}
+
+model InquiryStatusHistory {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inquiryId         String           @db.Uuid
+  fromStatus        InquiryStatus?
+  toStatus          InquiryStatus
+  changedByUserId   String?          @db.Uuid
+  changedByVendorId String?          @db.Uuid
+  actorType         InquiryActorType
+  reason            String?
+  createdAt         DateTime         @default(now())
+  inquiry           Inquiry          @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  changedByUser     User?            @relation("UserStatusHistory", fields: [changedByUserId], references: [id], onDelete: Restrict)
+  changedByVendor   VendorProfile?   @relation("VendorStatusHistory", fields: [changedByVendorId], references: [id], onDelete: Restrict)
+
+  @@index([inquiryId, createdAt, id])
+}
+
+model Notification {
+  id            String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipientType NotificationRecipientType
+  userId        String?                   @db.Uuid
+  vendorId      String?                   @db.Uuid
+  inquiryId     String?                   @db.Uuid
+  type          NotificationType
+  title         String
+  body          String
+  readAt        DateTime?
+  createdAt     DateTime                  @default(now())
+  user          User?                     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  vendor        VendorProfile?            @relation("VendorNotifications", fields: [vendorId], references: [id], onDelete: Cascade)
+  inquiry       Inquiry?                  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@index([vendorId, readAt, createdAt])
+  @@index([inquiryId])
+}
+
+model QuoteInterest {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  service            String
+  emailSentAt        DateTime?
+  emailDeliveryError String?
+  createdAt          DateTime  @default(now())
+
+  @@index([service, createdAt])
+  @@index([createdAt])
+}
+
+model InquiryIdempotencyKey {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  key         String
+  requestHash String
+  inquiryId   String   @db.Uuid
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inquiry     Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([expiresAt])
+}
+
+model InsuranceOperatingModel {
+  id                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  legalEntityName            String
+  tradeName                  String?
+  operatingRole              InsuranceOperatingRole
+  licenceNumber              String
+  licenceAuthority           String
+  licenceIssuedAt            DateTime?
+  licenceValidFrom           DateTime
+  licenceValidUntil          DateTime?
+  status                     InsuranceOperatingModelStatus @default(DRAFT)
+  countryCode                String                       @default("IN") @db.Char(2)
+  primaryJurisdiction        String
+  permittedInsuranceLines    String[]                     @default([])
+  permittedOrganizationTypes InsuranceOrganizationType[]  @default([])
+  permittedCapabilities      InsuranceCapability[]        @default([])
+  restrictedCapabilities     InsuranceCapability[]        @default([])
+  configurationVersion       Int
+  effectiveFrom              DateTime?
+  effectiveUntil             DateTime?
+  createdByAdminUserId       String                       @db.Uuid
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  createdByAdminUser         AdminUser                    @relation("InsuranceOperatingModelCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+
+  @@unique([legalEntityName, primaryJurisdiction, configurationVersion])
+  @@index([status, effectiveFrom, effectiveUntil])
+  @@index([legalEntityName, primaryJurisdiction])
+}
+
+model InsuranceLine {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String              @unique
+  name        String
+  description String?
+  status      InsuranceLineStatus @default(DRAFT)
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  policyTypes InsurancePolicyType[]
+  organizations InsuranceOrganizationLine[]
+
+  @@index([status, sortOrder])
+}
+
+model InsuranceOrganization {
+  id                    String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type                  InsuranceOrganizationType
+  legalName             String
+  tradeName             String?
+  slug                  String                     @unique
+  registrationNumber    String
+  regulatoryAuthority   String
+  registrationValidFrom DateTime?
+  registrationValidUntil DateTime?
+  status                InsuranceOrganizationStatus @default(DRAFT)
+  websiteUrl            String?
+  supportEmail          String?
+  supportPhone          String?
+  grievanceEmail        String?
+  grievancePhone        String?
+  registeredAddress     String?
+  countryCode           String                     @default("IN") @db.Char(2)
+  primaryJurisdiction   String
+  submittedAt           DateTime?
+  reviewedAt            DateTime?
+  reviewedByAdminUserId String?                    @db.Uuid
+  rejectionReason       String?
+  suspensionReason      String?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  licences              InsuranceOrganizationLicence[]
+  documents             InsuranceOrganizationDocument[]
+  users                 InsuranceOrganizationUser[]
+  insuranceLines        InsuranceOrganizationLine[]
+  products              InsuranceProduct[]
+  rateCards             InsuranceRateCard[]
+  quotes                InsuranceQuote[]
+  integrationProviders  InsuranceIntegrationProvider[]
+  purchaseHandoffs      InsurancePurchaseHandoff[]
+
+  @@unique([registrationNumber, regulatoryAuthority])
+  @@index([type, status, updatedAt])
+  @@index([registrationValidUntil])
+}
+
+model InsuranceOrganizationLine {
+  organizationId  String                @db.Uuid
+  insuranceLineId String                @db.Uuid
+  createdAt       DateTime              @default(now())
+  organization    InsuranceOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  insuranceLine   InsuranceLine         @relation(fields: [insuranceLineId], references: [id], onDelete: Restrict)
+
+  @@id([organizationId, insuranceLineId])
+  @@index([insuranceLineId])
+}
+
+model InsuranceOrganizationLicence {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId     String               @db.Uuid
+  type               String
+  licenceNumber      String
+  authority          String
+  validFrom          DateTime
+  validUntil         DateTime?
+  status             InsuranceLicenceStatus @default(DRAFT)
+  permittedLineCodes String[]             @default([])
+  scope              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  organization       InsuranceOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents          InsuranceOrganizationDocument[]
+
+  @@unique([organizationId, licenceNumber])
+  @@index([organizationId, validUntil])
+  @@index([licenceNumber])
+  @@index([status, validUntil])
+}
+
+model InsuranceOrganizationDocument {
+  id                        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId            String                  @db.Uuid
+  licenceId                 String?                 @db.Uuid
+  type                      InsuranceDocumentType
+  storageKey                String                  @unique
+  originalFileName          String
+  mimeType                  String
+  sizeBytes                 Int
+  checksumSha256            String
+  status                    InsuranceDocumentStatus @default(UPLOADED)
+  metadata                  Json                    @default("{}")
+  uploadedByAdminUserId     String?                 @db.Uuid
+  uploadedByOrganizationUserId String?              @db.Uuid
+  uploadedAt                DateTime                @default(now())
+  reviewedAt                DateTime?
+  reviewedByAdminUserId     String?                 @db.Uuid
+  rejectionReason           String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+  organization              InsuranceOrganization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  licence                   InsuranceOrganizationLicence? @relation(fields: [licenceId], references: [id], onDelete: SetNull)
+  uploadedByAdminUser       AdminUser?              @relation("InsuranceDocumentUploadedByAdmin", fields: [uploadedByAdminUserId], references: [id], onDelete: SetNull)
+  uploadedByOrganizationUser InsuranceOrganizationUser? @relation("InsuranceDocumentUploadedByOrganizationUser", fields: [uploadedByOrganizationUserId], references: [id], onDelete: SetNull)
+  reviewedByAdminUser       AdminUser?              @relation("InsuranceDocumentReviewedByAdmin", fields: [reviewedByAdminUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([licenceId])
+}
+
+model InsuranceOrganizationUser {
+  id             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String                         @db.Uuid
+  userId         String                         @db.Uuid
+  role           InsuranceOrganizationUserRole
+  status         InsuranceOrganizationUserStatus @default(INVITED)
+  invitedAt      DateTime                       @default(now())
+  acceptedAt     DateTime?
+  lastAccessAt   DateTime?
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt
+  organization   InsuranceOrganization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  uploadedDocuments InsuranceOrganizationDocument[] @relation("InsuranceDocumentUploadedByOrganizationUser")
+
+  @@unique([organizationId, userId])
+  @@index([userId, status])
+  @@index([organizationId, status])
+}
+
+model InsurancePolicyType {
+  id                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  insuranceLineId    String                    @db.Uuid
+  code               String
+  name               String
+  slug               String                    @unique
+  description        String?
+  status             InsurancePolicyTypeStatus @default(DRAFT)
+  isEnabledForMvp    Boolean                   @default(false)
+  sortOrder          Int                       @default(0)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  insuranceLine      InsuranceLine             @relation(fields: [insuranceLineId], references: [id], onDelete: Restrict)
+  products           InsuranceProduct[]
+  questionSchemas    InsuranceQuestionSchema[]
+  needAssessments    InsuranceNeedAssessment[]
+  quoteRequests      InsuranceQuoteRequest[]
+  quotes             InsuranceQuote[]
+  rankingMethodologies InsuranceRankingMethodology[]
+
+  @@unique([insuranceLineId, code])
+  @@index([status, sortOrder])
+  @@index([insuranceLineId])
+}
+
+model InsuranceDisclosureTemplate {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                    String
+  name                    String
+  audience                InsuranceDisclosureAudience
+  purpose                 InsuranceDisclosurePurpose
+  content                 String
+  contentFormat           String                    @default("plain_text")
+  version                 Int
+  status                  InsuranceTemplateStatus   @default(DRAFT)
+  effectiveFrom           DateTime?
+  effectiveUntil          DateTime?
+  requiresAcknowledgement Boolean                   @default(false)
+  createdByAdminUserId    String                    @db.Uuid
+  publishedByAdminUserId  String?                   @db.Uuid
+  publishedAt             DateTime?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  createdByAdminUser      AdminUser                 @relation("InsuranceDisclosureCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+  publishedByAdminUser    AdminUser?                @relation("InsuranceDisclosurePublishedBy", fields: [publishedByAdminUserId], references: [id], onDelete: Restrict)
+
+  @@unique([code, audience, version])
+  @@index([code, audience, status, effectiveFrom])
+}
+
+model InsuranceConsentTemplate {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                  String
+  name                  String
+  purpose               InsuranceConsentPurpose
+  description           String?
+  dataCategories        String[]                @default([])
+  processingPurposes    String[]                @default([])
+  thirdPartyCategories  String[]                @default([])
+  retentionReference    String?
+  withdrawalDescription String?
+  content               String
+  version               Int
+  status                InsuranceTemplateStatus @default(DRAFT)
+  effectiveFrom         DateTime?
+  effectiveUntil        DateTime?
+  createdByAdminUserId  String                  @db.Uuid
+  publishedByAdminUserId String?                @db.Uuid
+  publishedAt           DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  createdByAdminUser    AdminUser               @relation("InsuranceConsentCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+  publishedByAdminUser  AdminUser?              @relation("InsuranceConsentPublishedBy", fields: [publishedByAdminUserId], references: [id], onDelete: Restrict)
+
+  @@unique([code, version])
+  @@index([code, status, effectiveFrom])
+}
+
+model InsuranceConfigurationHistory {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId     String    @db.Uuid
+  action          String
+  entityType      String
+  entityId        String?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  adminUser       AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
+}
+
+model InsuranceProduct {
+  id               String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String                 @db.Uuid
+  policyTypeId     String                 @db.Uuid
+  code             String
+  slug             String                 @unique
+  currentVersionId String?                @unique @db.Uuid
+  status           InsuranceProductStatus @default(DRAFT)
+  withdrawnAt      DateTime?
+  withdrawalReason String?
+  createdByAdminUserId String              @db.Uuid
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  organization     InsuranceOrganization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  policyType       InsurancePolicyType    @relation(fields: [policyTypeId], references: [id], onDelete: Restrict)
+  createdByAdminUser AdminUser            @relation("InsuranceProductCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+  currentVersion   InsuranceProductVersion? @relation("InsuranceProductCurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  versions         InsuranceProductVersion[] @relation("InsuranceProductVersions")
+  documents        InsuranceProductDocument[]
+  rateCards        InsuranceRateCard[]
+  quotes           InsuranceQuote[]
+  providerMappings InsuranceProviderProductMapping[]
+  purchaseHandoffs InsurancePurchaseHandoff[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status, updatedAt])
+  @@index([policyTypeId, status])
+}
+
+model InsuranceProductVersion {
+  id                   String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId            String                        @db.Uuid
+  versionNumber        Int
+  status               InsuranceProductVersionStatus @default(DRAFT)
+  name                 String
+  shortDescription     String
+  longDescription      String?
+  coverageSummary      String?
+  availabilityScope    InsuranceAvailabilityScope    @default(PAN_INDIA)
+  effectiveFrom        DateTime?
+  effectiveUntil       DateTime?
+  createdByAdminUserId String                        @db.Uuid
+  submittedAt          DateTime?
+  approvedAt           DateTime?
+  approvedByAdminUserId String?                      @db.Uuid
+  rejectedAt           DateTime?
+  rejectionReason      String?
+  createdAt            DateTime                      @default(now())
+  updatedAt            DateTime                      @updatedAt
+  product              InsuranceProduct              @relation("InsuranceProductVersions", fields: [productId], references: [id], onDelete: Cascade)
+  currentForProduct    InsuranceProduct?             @relation("InsuranceProductCurrentVersion")
+  createdByAdminUser   AdminUser                     @relation("InsuranceProductVersionCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+  approvedByAdminUser  AdminUser?                    @relation("InsuranceProductVersionApprovedBy", fields: [approvedByAdminUserId], references: [id], onDelete: Restrict)
+  coverages            InsuranceProductCoverage[]
+  eligibilityRules     InsuranceProductEligibilityRule[]
+  sumInsuredOptions    InsuranceProductSumInsuredOption[]
+  premiumBasis         InsuranceProductPremiumBasis?
+  waitingPeriods       InsuranceProductWaitingPeriod[]
+  exclusions           InsuranceProductExclusion[]
+  addons               InsuranceProductAddon[]
+  deductibles          InsuranceProductDeductible[]
+  availability         InsuranceProductAvailability[]
+  documents            InsuranceProductDocument[]
+  rateCards            InsuranceRateCard[]
+  eligibilityEvaluations InsuranceEligibilityEvaluation[]
+  quoteAttempts        InsuranceQuoteAttempt[]
+  calculationInputs    InsuranceQuoteCalculationInput[]
+  quotes               InsuranceQuote[]
+  providerMappings     InsuranceProviderProductMapping[]
+
+  @@unique([productId, versionNumber])
+  @@index([productId, status, effectiveFrom, effectiveUntil])
+}
+
+model InsuranceProductCoverage {
+  id               String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                @db.Uuid
+  code             String
+  name             String
+  description      String
+  coverageType     InsuranceCoverageType
+  limitDescription String?
+  isCore           Boolean               @default(false)
+  sortOrder        Int                   @default(0)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  productVersion   InsuranceProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([productVersionId, code])
+  @@index([productVersionId, sortOrder])
+}
+
+model InsuranceProductEligibilityRule {
+  id               String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                       @db.Uuid
+  ruleType         InsuranceEligibilityRuleType
+  operator         InsuranceEligibilityOperator
+  value            String
+  unit             String?
+  description      String
+  isHardRule       Boolean                      @default(true)
+  sortOrder        Int                          @default(0)
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  productVersion   InsuranceProductVersion      @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+
+  @@index([productVersionId, sortOrder])
+}
+
+model InsuranceProductSumInsuredOption {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                  @db.Uuid
+  amount           Decimal                 @db.Decimal(14, 2)
+  currency         String                  @default("INR") @db.Char(3)
+  label            String?
+  isDefault        Boolean                 @default(false)
+  sortOrder        Int                     @default(0)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  productVersion   InsuranceProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([productVersionId, amount])
+  @@index([productVersionId, sortOrder])
+}
+
+model InsuranceProductPremiumBasis {
+  id               String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                    @unique @db.Uuid
+  basisType        InsurancePremiumBasisType
+  description      String
+  metadata         Json                      @default("{}")
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  productVersion   InsuranceProductVersion   @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+}
+
+model InsuranceProductWaitingPeriod {
+  id               String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                    @db.Uuid
+  code             String
+  name             String
+  description      String
+  type             InsuranceWaitingPeriodType
+  durationValue    Int
+  durationUnit     InsuranceDurationUnit
+  appliesTo        String?
+  sortOrder        Int                       @default(0)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  productVersion   InsuranceProductVersion   @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([productVersionId, code])
+  @@index([productVersionId, sortOrder])
+}
+
+model InsuranceProductExclusion {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                  @db.Uuid
+  code             String
+  title            String
+  description      String
+  category         String?
+  sortOrder        Int                     @default(0)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  productVersion   InsuranceProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([productVersionId, code])
+  @@index([productVersionId, sortOrder])
+}
+
+model InsuranceProductAddon {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId         String                     @db.Uuid
+  code                     String
+  name                     String
+  description              String
+  status                   InsuranceAddonStatus      @default(ACTIVE)
+  premiumImpactType        InsurancePremiumImpactType
+  premiumImpactDescription String?
+  sortOrder                Int                        @default(0)
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  productVersion           InsuranceProductVersion    @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([productVersionId, code])
+  @@index([productVersionId, sortOrder])
+}
+
+model InsuranceProductDeductible {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                  @db.Uuid
+  type             InsuranceDeductibleType
+  amount           Decimal?                @db.Decimal(14, 2)
+  percentage       Decimal?                @db.Decimal(5, 2)
+  currency         String?                 @db.Char(3)
+  description      String
+  isOptional       Boolean                 @default(false)
+  sortOrder        Int                     @default(0)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  productVersion   InsuranceProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+
+  @@index([productVersionId, sortOrder])
+}
+
+model InsuranceProductAvailability {
+  id               String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productVersionId String                       @db.Uuid
+  stateId          String?                      @db.Uuid
+  cityId           String?                      @db.Uuid
+  availabilityType InsuranceAvailabilityType    @default(AVAILABLE)
+  createdAt        DateTime                     @default(now())
+  productVersion   InsuranceProductVersion      @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+  state            State?                       @relation(fields: [stateId], references: [id], onDelete: Restrict)
+  city             City?                        @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  @@index([productVersionId])
+  @@index([stateId])
+  @@index([cityId])
+}
+
+model InsuranceProductDocument {
+  id                     String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId              String                          @db.Uuid
+  productVersionId       String                          @db.Uuid
+  type                   InsuranceProductDocumentType
+  title                  String
+  storageKey             String                          @unique
+  originalFileName       String
+  mimeType               String
+  sizeBytes              Int
+  checksumSha256         String
+  status                 InsuranceProductDocumentStatus @default(UPLOADED)
+  effectiveFrom          DateTime?
+  effectiveUntil         DateTime?
+  uploadedByUserId       String?                         @db.Uuid
+  uploadedByAdminUserId  String?                         @db.Uuid
+  approvedByAdminUserId  String?                         @db.Uuid
+  approvedAt             DateTime?
+  createdAt              DateTime                        @default(now())
+  updatedAt              DateTime                        @updatedAt
+  product                InsuranceProduct                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVersion         InsuranceProductVersion         @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+  uploadedByUser         User?                           @relation("InsuranceProductDocumentUploadedByUser", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+  uploadedByAdminUser    AdminUser?                      @relation("InsuranceProductDocumentUploadedByAdmin", fields: [uploadedByAdminUserId], references: [id], onDelete: SetNull)
+  approvedByAdminUser    AdminUser?                      @relation("InsuranceProductDocumentApprovedBy", fields: [approvedByAdminUserId], references: [id], onDelete: SetNull)
+
+  @@index([productId, productVersionId, status])
+  @@index([productVersionId, type])
+}
+
+model InsuranceQuestionSchema {
+  id                    String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  policyTypeId          String                        @db.Uuid
+  name                  String
+  version               Int
+  status                InsuranceQuestionSchemaStatus @default(DRAFT)
+  effectiveFrom         DateTime?
+  effectiveUntil        DateTime?
+  createdByAdminUserId  String                        @db.Uuid
+  publishedByAdminUserId String?                      @db.Uuid
+  publishedAt           DateTime?
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  policyType            InsurancePolicyType           @relation(fields: [policyTypeId], references: [id], onDelete: Restrict)
+  createdByAdminUser    AdminUser                     @relation("InsuranceQuestionSchemaCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+  publishedByAdminUser  AdminUser?                    @relation("InsuranceQuestionSchemaPublishedBy", fields: [publishedByAdminUserId], references: [id], onDelete: Restrict)
+  sections              InsuranceQuestionSection[]
+  assessments           InsuranceNeedAssessment[]
+
+  @@unique([policyTypeId, version])
+  @@index([policyTypeId, status, effectiveFrom, effectiveUntil])
+}
+
+model InsuranceQuestionSection {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionSchemaId String                  @db.Uuid
+  key              String
+  title            String
+  description      String?
+  sortOrder        Int                     @default(0)
+  isRequired       Boolean                 @default(true)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  questionSchema   InsuranceQuestionSchema @relation(fields: [questionSchemaId], references: [id], onDelete: Cascade)
+  questions        InsuranceQuestion[]
+
+  @@unique([questionSchemaId, key])
+  @@index([questionSchemaId, sortOrder])
+}
+
+model InsuranceQuestion {
+  id                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sectionId          String                    @db.Uuid
+  key                String
+  label              String
+  description        String?
+  helpText           String?
+  fieldType          InsuranceQuestionFieldType
+  dataClassification InsuranceDataClassification @default(GENERAL)
+  isRequired         Boolean                   @default(false)
+  sortOrder          Int                       @default(0)
+  validationConfig   Json                      @default("{}")
+  visibilityConfig   Json                      @default("{}")
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  section            InsuranceQuestionSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  options            InsuranceQuestionOption[]
+  answers            InsuranceNeedAnswer[]
+
+  @@unique([sectionId, key])
+  @@index([sectionId, sortOrder])
+}
+
+model InsuranceQuestionOption {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId  String            @db.Uuid
+  value       String
+  label       String
+  description String?
+  sortOrder   Int               @default(0)
+  isActive    Boolean           @default(true)
+  question    InsuranceQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, value])
+  @@index([questionId, sortOrder])
+}
+
+model InsuranceNeedAssessment {
+  id                      String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referenceNumber         String                       @unique
+  userId                  String                       @db.Uuid
+  policyTypeId            String                       @db.Uuid
+  questionSchemaVersionId String                       @db.Uuid
+  status                  InsuranceNeedAssessmentStatus @default(DRAFT)
+  currentSectionKey       String?
+  completionPercentage    Int                          @default(0)
+  version                 Int                          @default(1)
+  startedAt               DateTime                     @default(now())
+  lastSavedAt             DateTime                     @default(now())
+  submittedAt             DateTime?
+  expiredAt               DateTime?
+  withdrawnAt             DateTime?
+  createdAt               DateTime                     @default(now())
+  updatedAt               DateTime                     @updatedAt
+  user                    User                         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  policyType              InsurancePolicyType          @relation(fields: [policyTypeId], references: [id], onDelete: Restrict)
+  questionSchema          InsuranceQuestionSchema      @relation(fields: [questionSchemaVersionId], references: [id], onDelete: Restrict)
+  answers                 InsuranceNeedAnswer[]
+  disclosures             InsuranceDisclosureAcknowledgement[]
+  consents                InsuranceConsentRecord[]
+  snapshot                InsuranceNeedProfileSnapshot?
+  quoteRequests           InsuranceQuoteRequest[]
+
+  @@index([userId, status, updatedAt])
+  @@index([policyTypeId, status])
+}
+
+model InsuranceNeedAnswer {
+  id                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessmentId       String                    @db.Uuid
+  questionId         String                    @db.Uuid
+  valueJson          Json
+  encryptedValue     String?
+  dataClassification InsuranceDataClassification
+  createdByUserId    String                    @db.Uuid
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  assessment         InsuranceNeedAssessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question           InsuranceQuestion         @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  createdByUser      User                      @relation("InsuranceNeedAnswerCreatedByUser", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, questionId])
+  @@index([assessmentId])
+}
+
+model InsuranceDisclosureAcknowledgement {
+  id                   String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String                  @db.Uuid
+  assessmentId         String                  @db.Uuid
+  disclosureTemplateId String                  @db.Uuid
+  disclosureVersion    Int
+  acknowledgedAt       DateTime                @default(now())
+  context              Json                    @default("{}")
+  createdAt            DateTime                @default(now())
+  user                 User                    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  assessment           InsuranceNeedAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, disclosureTemplateId])
+  @@index([userId, assessmentId])
+}
+
+model InsuranceConsentRecord {
+  id                String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String                  @db.Uuid
+  assessmentId      String                  @db.Uuid
+  consentTemplateId String                  @db.Uuid
+  consentVersion    Int
+  purpose           InsuranceConsentPurpose
+  status            InsuranceConsentStatus  @default(GRANTED)
+  grantedAt         DateTime                 @default(now())
+  withdrawnAt       DateTime?
+  source            String                   @default("WEB")
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  assessment        InsuranceNeedAssessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, consentTemplateId])
+  @@index([userId, assessmentId, purpose])
+}
+
+model InsuranceNeedProfileSnapshot {
+  id                 String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessmentId       String                  @unique @db.Uuid
+  schemaVersion      Int
+  policyTypeId       String                  @db.Uuid
+  answersSnapshot    Json
+  disclosureSnapshot Json
+  consentSnapshot    Json
+  submittedAt        DateTime                @default(now())
+  createdAt          DateTime                @default(now())
+  assessment         InsuranceNeedAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  quoteRequests      InsuranceQuoteRequest[]
+
+  @@index([policyTypeId, submittedAt])
+}
+
+model InsuranceQuoteRequest {
+  id                           String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referenceNumber              String                       @unique
+  userId                       String                       @db.Uuid
+  assessmentId                 String                       @db.Uuid
+  needProfileSnapshotId        String                       @db.Uuid
+  policyTypeId                 String                       @db.Uuid
+  status                       InsuranceQuoteRequestStatus @default(PENDING)
+  sourceMode                   InsuranceQuoteSourceMode    @default(MANUAL_RATE_CARD)
+  idempotencyKey               String
+  requestHash                  String
+  requestedAt                  DateTime                     @default(now())
+  processingStartedAt          DateTime?
+  completedAt                  DateTime?
+  expiresAt                    DateTime?
+  recalculationOfQuoteRequestId String?                     @db.Uuid
+  createdAt                    DateTime                     @default(now())
+  updatedAt                    DateTime                     @updatedAt
+  user                         User                         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  assessment                   InsuranceNeedAssessment      @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  needProfileSnapshot          InsuranceNeedProfileSnapshot @relation(fields: [needProfileSnapshotId], references: [id], onDelete: Restrict)
+  policyType                   InsurancePolicyType          @relation(fields: [policyTypeId], references: [id], onDelete: Restrict)
+  recalculationOf              InsuranceQuoteRequest?       @relation("InsuranceQuoteRecalculations", fields: [recalculationOfQuoteRequestId], references: [id], onDelete: SetNull)
+  recalculations               InsuranceQuoteRequest[]      @relation("InsuranceQuoteRecalculations")
+  eligibilityEvaluations       InsuranceEligibilityEvaluation[]
+  attempts                     InsuranceQuoteAttempt[]
+  calculationInputs            InsuranceQuoteCalculationInput[]
+  quotes                       InsuranceQuote[]
+  rankings                     InsuranceQuoteRanking[]
+  providerRequests             InsuranceProviderRequest[]
+  purchaseHandoffs             InsurancePurchaseHandoff[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, requestedAt])
+  @@index([status, requestedAt])
+  @@index([assessmentId])
+}
+
+model InsuranceEligibilityEvaluation {
+  id                 String                              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteRequestId     String                              @db.Uuid
+  productId          String                              @db.Uuid
+  productVersionId   String                              @db.Uuid
+  status             InsuranceEligibilityEvaluationStatus
+  engineVersion      String
+  evaluatedAt        DateTime                            @default(now())
+  createdAt          DateTime                            @default(now())
+  quoteRequest       InsuranceQuoteRequest               @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  productVersion     InsuranceProductVersion             @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+  reasons            InsuranceEligibilityReason[]
+
+  @@index([quoteRequestId, status])
+  @@index([productId, productVersionId])
+}
+
+model InsuranceEligibilityReason {
+  id           String                             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  evaluationId String                             @db.Uuid
+  code         String
+  message      String
+  ruleType     InsuranceEligibilityRuleType?
+  severity     InsuranceEligibilityReasonSeverity @default(INFO)
+  createdAt    DateTime                           @default(now())
+  evaluation   InsuranceEligibilityEvaluation     @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationId])
+}
+
+model InsuranceRateCard {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId         String                  @db.Uuid
+  productId              String                  @db.Uuid
+  productVersionId       String                  @db.Uuid
+  name                   String
+  version                Int
+  status                 InsuranceRateCardStatus @default(DRAFT)
+  effectiveFrom          DateTime
+  effectiveUntil         DateTime?
+  currency               String                  @default("INR") @db.Char(3)
+  createdByAdminUserId   String                  @db.Uuid
+  approvedByAdminUserId  String?                 @db.Uuid
+  publishedAt            DateTime?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  organization           InsuranceOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product                InsuranceProduct        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVersion         InsuranceProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+  createdByAdminUser     AdminUser               @relation("InsuranceRateCardCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+  approvedByAdminUser    AdminUser?              @relation("InsuranceRateCardApprovedBy", fields: [approvedByAdminUserId], references: [id], onDelete: Restrict)
+  entries                InsuranceRateCardEntry[]
+
+  @@unique([productVersionId, version])
+  @@index([productVersionId, status, effectiveFrom, effectiveUntil])
+}
+
+model InsuranceRateCardEntry {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rateCardId          String            @db.Uuid
+  ageMin              Int?
+  ageMax              Int?
+  sumInsured          Decimal?          @db.Decimal(14, 2)
+  memberConfiguration String?
+  locationClass       String?
+  policyTerm          Int?
+  basePremium         Decimal           @db.Decimal(14, 2)
+  addonPremium        Decimal           @default(0) @db.Decimal(14, 2)
+  deductibleAdjustment Decimal          @default(0) @db.Decimal(14, 2)
+  otherAdjustments    Decimal           @default(0) @db.Decimal(14, 2)
+  taxAmount           Decimal           @default(0) @db.Decimal(14, 2)
+  metadata            Json              @default("{}")
+  sortOrder           Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  rateCard            InsuranceRateCard @relation(fields: [rateCardId], references: [id], onDelete: Cascade)
+
+  @@index([rateCardId, sortOrder])
+}
+
+model InsuranceQuoteAttempt {
+  id              String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteRequestId  String                        @db.Uuid
+  productId       String                        @db.Uuid
+  productVersionId String                       @db.Uuid
+  providerType    InsuranceQuoteSourceMode     @default(MANUAL_RATE_CARD)
+  providerVersion String?
+  status          InsuranceQuoteAttemptStatus
+  failureCode     String?
+  failureCategory InsuranceQuoteFailureCategory?
+  internalMessage String?
+  startedAt       DateTime                      @default(now())
+  completedAt     DateTime?
+  durationMs      Int?
+  createdAt       DateTime                      @default(now())
+  quoteRequest    InsuranceQuoteRequest         @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  productVersion  InsuranceProductVersion       @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+
+  @@index([quoteRequestId, status])
+}
+
+model InsuranceQuoteCalculationInput {
+  id               String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteRequestId   String                     @db.Uuid
+  productId        String                     @db.Uuid
+  productVersionId String                     @db.Uuid
+  providerType     InsuranceQuoteSourceMode
+  providerVersion  String
+  inputSnapshot    Json
+  createdAt        DateTime                   @default(now())
+  quoteRequest     InsuranceQuoteRequest      @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  productVersion   InsuranceProductVersion    @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+
+  @@index([quoteRequestId])
+}
+
+model InsuranceQuote {
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteRequestId        String               @db.Uuid
+  userId                String               @db.Uuid
+  organizationId        String               @db.Uuid
+  productId             String               @db.Uuid
+  productVersionId      String               @db.Uuid
+  policyTypeId          String               @db.Uuid
+  status                InsuranceQuoteStatus
+  currency              String?              @db.Char(3)
+  basePremium           Decimal?             @db.Decimal(14, 2)
+  addonPremium          Decimal?             @db.Decimal(14, 2)
+  deductibleAdjustment  Decimal?             @db.Decimal(14, 2)
+  otherAdjustments      Decimal?             @db.Decimal(14, 2)
+  taxAmount             Decimal?             @db.Decimal(14, 2)
+  totalPremium          Decimal?             @db.Decimal(14, 2)
+  sumInsured            Decimal?             @db.Decimal(14, 2)
+  policyTerm            Int?
+  deductibleSummary     String?
+  waitingPeriodSummary  String?
+  coverageSummary       String?
+  exclusionSummary      String?
+  addonSummary          String?
+  sourceType            InsuranceQuoteSourceMode
+  sourceReference       String?
+  calculationVersion    String
+  resultSnapshot        Json
+  validFrom             DateTime?
+  validUntil            DateTime?
+  generatedAt           DateTime?
+  expiredAt             DateTime?
+  createdAt             DateTime             @default(now())
+  quoteRequest          InsuranceQuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  organization          InsuranceOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product               InsuranceProduct     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productVersion        InsuranceProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+  policyType            InsurancePolicyType  @relation(fields: [policyTypeId], references: [id], onDelete: Restrict)
+  savedByUsers          InsuranceSavedQuote[]
+  rankings              InsuranceQuoteRanking[]
+  providerRequests      InsuranceProviderRequest[]
+  purchaseHandoffs      InsurancePurchaseHandoff[]
+  redirectEvents        InsuranceRedirectEvent[]
+
+  @@index([quoteRequestId, status])
+  @@index([userId, createdAt])
+  @@index([productId, productVersionId])
+}
+
+model InsuranceSavedQuote {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String         @db.Uuid
+  quoteId   String         @db.Uuid
+  savedAt   DateTime       @default(now())
+  createdAt DateTime       @default(now())
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quote     InsuranceQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quoteId])
+  @@index([userId, savedAt])
+}
+
+model InsuranceRankingMethodology {
+  id                     String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                   String
+  name                   String
+  description            String
+  policyTypeId           String                           @db.Uuid
+  version                Int
+  status                 InsuranceRankingMethodologyStatus @default(DRAFT)
+  effectiveFrom          DateTime?
+  effectiveUntil         DateTime?
+  methodologyType        InsuranceRankingMethodologyType
+  configuration          Json
+  customerExplanation    String
+  createdByAdminUserId   String                           @db.Uuid
+  publishedByAdminUserId String?                          @db.Uuid
+  publishedAt            DateTime?
+  createdAt              DateTime                         @default(now())
+  updatedAt              DateTime                         @updatedAt
+  policyType             InsurancePolicyType              @relation(fields: [policyTypeId], references: [id], onDelete: Restrict)
+  createdByAdminUser     AdminUser                        @relation("InsuranceRankingMethodologyCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+  publishedByAdminUser   AdminUser?                       @relation("InsuranceRankingMethodologyPublishedBy", fields: [publishedByAdminUserId], references: [id], onDelete: Restrict)
+  rankings               InsuranceQuoteRanking[]
+
+  @@unique([code, policyTypeId, version])
+  @@index([policyTypeId, status, effectiveFrom, effectiveUntil])
+}
+
+model InsuranceQuoteRanking {
+  id                           String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteRequestId               String                     @db.Uuid
+  quoteId                      String                     @db.Uuid
+  rankingMethodologyId         String                     @db.Uuid
+  rankingMethodologyVersion    Int
+  score                        Decimal                    @db.Decimal(7, 2)
+  rank                         Int
+  explanationJson              Json
+  generatedAt                  DateTime                   @default(now())
+  createdAt                    DateTime                   @default(now())
+  quoteRequest                 InsuranceQuoteRequest      @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  quote                        InsuranceQuote             @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  rankingMethodology           InsuranceRankingMethodology @relation(fields: [rankingMethodologyId], references: [id], onDelete: Restrict)
+
+  @@unique([quoteRequestId, quoteId, rankingMethodologyId])
+  @@index([quoteRequestId, rank])
+}
+
+model InsuranceIntegrationProvider {
+  id                String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String                        @db.Uuid
+  code              String
+  name              String
+  type              InsuranceIntegrationProviderType
+  environment       InsuranceIntegrationEnvironment
+  status            InsuranceIntegrationStatus   @default(DRAFT)
+  authType          InsuranceProviderAuthType
+  baseUrlReference  String
+  secretReference   String?
+  credentialVersion String?
+  lastRotatedAt     DateTime?
+  timeoutMs         Int
+  retryPolicy       Json                          @default("{}")
+  capabilities      String[]                      @default([])
+  healthStatus      InsuranceProviderHealthStatus @default(UNKNOWN)
+  lastHealthCheckAt DateTime?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+  organization      InsuranceOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  productMappings   InsuranceProviderProductMapping[]
+  requests          InsuranceProviderRequest[]
+  handoffs          InsurancePurchaseHandoff[]
+  redirectEvents    InsuranceRedirectEvent[]
+  events            InsuranceProviderEvent[]
+  conversions       InsuranceExternalConversion[]
+
+  @@unique([code, environment])
+  @@index([organizationId])
+  @@index([status, environment])
+}
+
+model InsuranceProviderProductMapping {
+  id                    String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  integrationProviderId String                         @db.Uuid
+  productId             String                         @db.Uuid
+  productVersionId      String?                        @db.Uuid
+  externalProductCode   String
+  externalPlanCode      String?
+  externalVariantCode   String?
+  status                InsuranceProviderMappingStatus @default(ACTIVE)
+  effectiveFrom         DateTime
+  effectiveUntil        DateTime?
+  metadata              Json                           @default("{}")
+  createdAt             DateTime                       @default(now())
+  updatedAt             DateTime                       @updatedAt
+  integrationProvider   InsuranceIntegrationProvider   @relation(fields: [integrationProviderId], references: [id], onDelete: Cascade)
+  product               InsuranceProduct               @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productVersion        InsuranceProductVersion?       @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([integrationProviderId, productId, productVersionId, externalProductCode])
+  @@index([integrationProviderId, status, effectiveFrom, effectiveUntil])
+  @@index([productId, status])
+}
+
+model InsuranceProviderRequest {
+  id                    String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteRequestId        String?                        @db.Uuid
+  quoteId               String?                        @db.Uuid
+  integrationProviderId String                         @db.Uuid
+  operationType         InsuranceProviderRequestOperation
+  externalReference     String?
+  requestHash           String
+  status                InsuranceProviderRequestStatus @default(STARTED)
+  errorCategory         InsuranceProviderErrorCategory?
+  startedAt             DateTime                       @default(now())
+  completedAt           DateTime?
+  durationMs            Int?
+  attemptNumber         Int                            @default(1)
+  createdAt             DateTime                       @default(now())
+  quoteRequest          InsuranceQuoteRequest?        @relation(fields: [quoteRequestId], references: [id], onDelete: SetNull)
+  quote                 InsuranceQuote?               @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  integrationProvider   InsuranceIntegrationProvider   @relation(fields: [integrationProviderId], references: [id], onDelete: Restrict)
+
+  @@index([integrationProviderId, createdAt])
+  @@index([quoteRequestId])
+  @@index([quoteId])
+  @@index([status, createdAt])
+}
+
+model InsurancePurchaseHandoff {
+  id                    String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referenceNumber       String                          @unique
+  userId                String                          @db.Uuid
+  quoteRequestId        String                          @db.Uuid
+  quoteId               String                          @db.Uuid
+  organizationId        String                          @db.Uuid
+  productId             String                          @db.Uuid
+  integrationProviderId String                          @db.Uuid
+  status                InsurancePurchaseHandoffStatus  @default(CREATED)
+  destinationType       InsuranceHandoffDestinationType @default(PROVIDER_REDIRECT)
+  externalReference     String?
+  stateTokenHash        String                          @unique
+  attribution           Json                            @default("{}")
+  createdAt             DateTime                        @default(now())
+  expiresAt             DateTime
+  redirectedAt          DateTime?
+  completedAt           DateTime?
+  failedAt              DateTime?
+  updatedAt             DateTime                        @updatedAt
+  user                  User                            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  quoteRequest          InsuranceQuoteRequest           @relation(fields: [quoteRequestId], references: [id], onDelete: Restrict)
+  quote                 InsuranceQuote                  @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  organization          InsuranceOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product               InsuranceProduct                @relation(fields: [productId], references: [id], onDelete: Restrict)
+  integrationProvider   InsuranceIntegrationProvider    @relation(fields: [integrationProviderId], references: [id], onDelete: Restrict)
+  redirectEvents        InsuranceRedirectEvent[]
+  providerEvents        InsuranceProviderEvent[]
+  conversion            InsuranceExternalConversion?
+
+  @@index([userId, createdAt])
+  @@index([quoteId, status])
+  @@index([integrationProviderId, status])
+  @@index([expiresAt])
+}
+
+model InsuranceRedirectEvent {
+  id                    String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  handoffId             String                       @db.Uuid
+  userId                String                       @db.Uuid
+  quoteId               String                       @db.Uuid
+  integrationProviderId String                       @db.Uuid
+  eventType             InsuranceRedirectEventType
+  destinationHost       String?
+  occurredAt            DateTime                     @default(now())
+  createdAt             DateTime                     @default(now())
+  handoff               InsurancePurchaseHandoff    @relation(fields: [handoffId], references: [id], onDelete: Cascade)
+  user                  User                         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  quote                 InsuranceQuote               @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  integrationProvider   InsuranceIntegrationProvider @relation(fields: [integrationProviderId], references: [id], onDelete: Restrict)
+
+  @@index([handoffId, occurredAt])
+  @@index([integrationProviderId, occurredAt])
+}
+
+model InsuranceProviderEvent {
+  id                    String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  integrationProviderId String                       @db.Uuid
+  handoffId             String?                      @db.Uuid
+  externalEventId       String
+  eventType             String
+  payloadHash           String
+  status                InsuranceProviderEventStatus @default(RECEIVED)
+  mappedStatus          InsurancePurchaseHandoffStatus?
+  receivedAt            DateTime                     @default(now())
+  processedAt           DateTime?
+  createdAt             DateTime                     @default(now())
+  integrationProvider   InsuranceIntegrationProvider @relation(fields: [integrationProviderId], references: [id], onDelete: Restrict)
+  handoff               InsurancePurchaseHandoff?   @relation(fields: [handoffId], references: [id], onDelete: SetNull)
+
+  @@unique([integrationProviderId, externalEventId])
+  @@index([integrationProviderId, status, receivedAt])
+}
+
+model InsuranceExternalConversion {
+  id                    String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  handoffId             String                            @unique @db.Uuid
+  integrationProviderId String                            @db.Uuid
+  externalReference     String?
+  status                InsuranceExternalConversionStatus @default(UNKNOWN)
+  externalStatus        String?
+  convertedAt           DateTime?
+  lastUpdatedAt         DateTime                          @default(now())
+  createdAt             DateTime                          @default(now())
+  updatedAt             DateTime                          @updatedAt
+  handoff               InsurancePurchaseHandoff         @relation(fields: [handoffId], references: [id], onDelete: Cascade)
+  integrationProvider   InsuranceIntegrationProvider     @relation(fields: [integrationProviderId], references: [id], onDelete: Restrict)
+
+  @@index([integrationProviderId, status])
+}

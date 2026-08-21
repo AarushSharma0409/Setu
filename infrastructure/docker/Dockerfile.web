@@ -1,15 +1,41 @@
-FROM node:24-alpine AS build
+FROM node:24.12.0-alpine AS base
 WORKDIR /app
-RUN corepack enable
-COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @setu/web build
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 
-FROM node:24-alpine AS runtime
-WORKDIR /app
+FROM base AS dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY frontend/web/package.json frontend/web/package.json
+COPY frontend/admin/package.json frontend/admin/package.json
+COPY backend/api/package.json backend/api/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/types/package.json packages/types/package.json
+COPY packages/ui/package.json packages/ui/package.json
+RUN pnpm install --frozen-lockfile
+
+FROM dependencies AS builder
+COPY . .
+ARG NEXT_PUBLIC_API_URL=/api/v1
+ARG NEXT_PUBLIC_WEB_URL=https://setu.invalid
+ARG NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=
+ARG NEXT_PUBLIC_SUPPORT_EMAIL=
+ARG NEXT_PUBLIC_SUPPORT_PHONE=
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
+ENV NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID
+ENV NEXT_PUBLIC_SUPPORT_EMAIL=$NEXT_PUBLIC_SUPPORT_EMAIL
+ENV NEXT_PUBLIC_SUPPORT_PHONE=$NEXT_PUBLIC_SUPPORT_PHONE
+RUN mkdir -p frontend/web/public && pnpm --filter @setu/web build
+RUN pnpm --filter @setu/web deploy --legacy --prod /opt/setu-web
+
+FROM base AS runner
 ENV NODE_ENV=production
-RUN corepack enable
-COPY --from=build /app /app
-USER node
+RUN addgroup --system --gid 1001 setu && adduser --system --uid 1001 --ingroup setu setu
+WORKDIR /app
+COPY --from=builder --chown=setu:setu /opt/setu-web /app
+COPY --from=builder --chown=setu:setu /app/frontend/web/.next /app/.next
+COPY --from=builder --chown=setu:setu /app/frontend/web/public /app/public
+USER setu
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@setu/web", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start", ".", "--port", "3000"]
