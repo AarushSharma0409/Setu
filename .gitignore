@@ -17,3 +17,6 @@ api-sprint3.err
 api-sprint4.err
 *.tsbuildinfo
 Dockerfile.local
+# Local SSH key material; never commit these files.
+gits
+gits.pub
